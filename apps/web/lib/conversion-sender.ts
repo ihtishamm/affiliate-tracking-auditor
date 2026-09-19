@@ -59,7 +59,7 @@ export interface SenderDeps {
 }
 
 export async function sendConversions(order: ParsedOrder, deps: SenderDeps): Promise<void> {
-  const log = deps.log.child({ order_id: String(order.id), order_name: order.name });
+  const log = deps.log.child({ order_id: order.id, order_name: order.name });
   await Promise.all([
     sendCapiPurchase(order, { ...deps, log }),
     sendPostback(order, { ...deps, log }),
@@ -96,7 +96,7 @@ async function sendCapiPurchase(order: ParsedOrder, deps: SenderDeps): Promise<v
         custom_data: {
           currency: order.currency,
           value: Number(order.totalPrice),
-          order_id: String(order.id),
+          order_id: order.id,
           ...(order.attribution[CLICK_ID_PARAM]
             ? { click_id: order.attribution[CLICK_ID_PARAM] }
             : {}),
@@ -112,7 +112,7 @@ async function sendCapiPurchase(order: ParsedOrder, deps: SenderDeps): Promise<v
   await withRetries(
     {
       kind: 'capi',
-      orderId: String(order.id),
+      orderId: order.id,
       eventId,
       targetHost: 'graph.facebook.com',
       piiHashed: hashed,
@@ -139,7 +139,7 @@ async function sendPostback(order: ParsedOrder, deps: SenderDeps): Promise<void>
     // is recorded rather than silently skipped; it is precisely the failure check 8 reports.
     deps.log.warn('postback not sent: order carries no click_id');
     await deps.record({
-      orderId: String(order.id),
+      orderId: order.id,
       kind: 'postback',
       attempt: 1,
       eventId: postbackId,
@@ -155,7 +155,7 @@ async function sendPostback(order: ParsedOrder, deps: SenderDeps): Promise<void>
   const payload: PostbackPayload = {
     postback_id: postbackId,
     click_id: clickId,
-    order_id: String(order.id),
+    order_id: order.id,
     status: 'approved',
     amount: Number(order.totalPrice),
     currency: order.currency,
@@ -169,7 +169,7 @@ async function sendPostback(order: ParsedOrder, deps: SenderDeps): Promise<void>
   await withRetries(
     {
       kind: 'postback',
-      orderId: String(order.id),
+      orderId: order.id,
       eventId: postbackId,
       targetHost,
       piiHashed: null,

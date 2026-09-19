@@ -35,7 +35,7 @@ export function insertShopifyWebhookEvent(db: Db) {
         eventId: row.eventId,
         topic: row.topic,
         shopDomain: row.shopDomain,
-        orderId: String(row.order.id),
+        orderId: row.order.id,
         orderName: row.order.name,
         totalPrice: row.order.totalPrice,
         currency: row.order.currency,

@@ -8,7 +8,7 @@ const postbackSecret = 'unit-test-postback-key-not-a-real-secret';
 
 function order(overrides: Partial<ParsedOrder> = {}): ParsedOrder {
   return {
-    id: 5592397545769,
+    id: '5592397545769',
     name: '#1004',
     totalPrice: '1025.00',
     currency: 'USD',

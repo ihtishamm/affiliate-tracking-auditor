@@ -24,8 +24,19 @@ export const SHOPIFY_SHOP_DOMAIN_HEADER = 'x-shopify-shop-domain';
 
 // Only the fields we use. Everything else in the payload (customer, addresses, line items) is
 // parsed past and forgotten. `email` and `phone` are read for hashing and never stored.
+//
+// Order IDs are int64 on Shopify's side. JSON.parse turns any integer above 2^53-1 into a
+// rounded double BEFORE zod runs — Shopify's own "Send test notification" order,
+// 820982911946154508, arrives as 820982911946154500 — and a rounded ID would produce a
+// Purchase event_id the checkout pixel never sent, so Meta could not deduplicate it. The
+// canonical, precision-safe identity is the string `admin_graphql_api_id`
+// ("gid://shopify/Order/<digits>"); the numeric `id` is the legacy REST field, accepted as a
+// fallback only while it is still exactly representable.
+const ORDER_GID = /^gid:\/\/shopify\/Order\/(\d+)$/;
+
 const orderWebhookSchema = z.object({
-  id: z.number().int().positive(),
+  id: z.number().positive(),
+  admin_graphql_api_id: z.string().regex(ORDER_GID).optional(),
   name: z.string(),
   total_price: z.string(),
   currency: z.string(),
@@ -38,9 +49,22 @@ const orderWebhookSchema = z.object({
     .default([]),
 });
 
+/**
+ * The gid carries the exact digits; the numeric field is trusted only while it is a safe
+ * integer, because past that point JSON.parse has already changed it. Returns null when
+ * neither source can give the true ID — the caller rejects rather than storing a wrong one.
+ */
+function resolveOrderId(gid: string | undefined, numericId: number): string | null {
+  const fromGid = gid ? ORDER_GID.exec(gid)?.[1] : undefined;
+  if (fromGid) return fromGid;
+  if (Number.isSafeInteger(numericId)) return String(numericId);
+  return null;
+}
+
 /** The part of an order that may be persisted: identity, money, attribution. No customer fields. */
 export interface StoredOrder {
-  id: number;
+  /** Shopify's numeric order ID as decimal digits; a string because int64 exceeds a JS number. */
+  id: string;
   name: string;
   totalPrice: string;
   currency: string;
@@ -117,10 +141,17 @@ export async function receiveShopifyOrder(
   }
   const o = parsed.data;
 
+  const orderId = resolveOrderId(o.admin_graphql_api_id, o.id);
+  if (orderId === null) {
+    const issues = ['id: exceeds 2^53-1 and no admin_graphql_api_id to read it from'];
+    deps.log.warn('shopify webhook rejected: schema', { issues });
+    return { status: 400, body: { error: 'invalid_payload', issues } };
+  }
+
   // Shopify documents X-Shopify-Event-Id as the deduplication key; older deliveries may only
   // carry X-Shopify-Webhook-Id, and as a last resort the order ID itself makes a redelivery of
   // the same order a duplicate rather than a double.
-  const eventId = headers.eventId ?? headers.webhookId ?? `order-${o.id}`;
+  const eventId = headers.eventId ?? headers.webhookId ?? `order-${orderId}`;
 
   const attribution: Record<string, string> = {};
   for (const attr of o.note_attributes) {
@@ -134,7 +165,7 @@ export async function receiveShopifyOrder(
   }
 
   const stored: StoredOrder = {
-    id: o.id,
+    id: orderId,
     name: o.name,
     totalPrice: o.total_price,
     currency: o.currency,
@@ -156,7 +187,7 @@ export async function receiveShopifyOrder(
   });
   deps.log.info(inserted ? 'shopify webhook accepted' : 'shopify webhook duplicate ignored', {
     event_id: eventId,
-    order_id: o.id,
+    order_id: orderId,
     order_name: o.name,
     toggles: order.breakToggles,
   });

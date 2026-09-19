@@ -8,6 +8,7 @@ const log = createLogger({ service: 'test', level: 'error', write: () => {} });
 // The shape Shopify actually sends, reduced to the fields that matter plus some it also sends.
 const order = {
   id: 5592397545769,
+  admin_graphql_api_id: 'gid://shopify/Order/5592397545769',
   name: '#1004',
   total_price: '1025.00',
   currency: 'USD',
@@ -120,5 +121,53 @@ describe('receiveShopifyOrder', () => {
     });
     expect(out.status).toBe(400);
     expect(store.inserted).toHaveLength(0);
+  });
+
+  // Shopify's "Send test notification" order. Its id is above 2^53-1, so JSON.parse has
+  // already rounded the number to ...500 by the time anything can look at it; only the gid
+  // still holds the real digits. This exact payload was rejected in production before the fix.
+  it('reads an int64 order id from admin_graphql_api_id, not from the rounded number', async () => {
+    const store = memoryStore();
+    const sample = JSON.stringify({
+      ...order,
+      id: 820982911946154508,
+      admin_graphql_api_id: 'gid://shopify/Order/820982911946154508',
+      name: '#9999',
+    });
+    expect(String(JSON.parse(sample).id)).toBe('820982911946154500'); // sanity: already rounded
+    const out = await receiveShopifyOrder(sample, headers({ hmac: signBase64(secret, sample) }), {
+      secret,
+      insert: store.insert,
+      log,
+    });
+    expect(out.status).toBe(200);
+    expect(store.inserted[0]?.order.id).toBe('820982911946154508');
+  });
+
+  it('rejects an int64 order id when no gid is present, rather than storing a rounded one', async () => {
+    const store = memoryStore();
+    const { admin_graphql_api_id: _omit, ...rest } = order;
+    const sample = JSON.stringify({ ...rest, id: 820982911946154508 });
+    const out = await receiveShopifyOrder(sample, headers({ hmac: signBase64(secret, sample) }), {
+      secret,
+      insert: store.insert,
+      log,
+    });
+    expect(out.status).toBe(400);
+    expect(out.status === 400 && out.body.issues[0]).toMatch(/2\^53/);
+    expect(store.inserted).toHaveLength(0);
+  });
+
+  it('still accepts a safe-integer id without a gid', async () => {
+    const store = memoryStore();
+    const { admin_graphql_api_id: _omit, ...rest } = order;
+    const sample = JSON.stringify(rest);
+    const out = await receiveShopifyOrder(sample, headers({ hmac: signBase64(secret, sample) }), {
+      secret,
+      insert: store.insert,
+      log,
+    });
+    expect(out.status).toBe(200);
+    expect(store.inserted[0]?.order.id).toBe('5592397545769');
   });
 });
