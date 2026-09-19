@@ -1,0 +1,72 @@
+{%- comment -%}
+  attribution-debug.liquid — shows what attribution the store currently holds, from all three
+  places it can live, so a human can verify a funnel (or a break-it toggle in M2) by eye.
+
+  Add via the theme editor to the product and cart templates. The three columns should agree;
+  a mismatch is itself diagnostic:
+    cart      — what Liquid sees on the server-side cart (what the order will carry)
+    cookie    — the first-party _aff cookie
+    storage   — localStorage
+{%- endcomment -%}
+{%- if section.settings.visible -%}
+  <div class="aff-debug" style="margin:1rem 0;padding:.75rem 1rem;border:1px dashed #999;font:12px/1.5 ui-monospace,monospace;color:#222;background:#fafafa">
+    <strong>Attribution debug</strong>
+    <table style="width:100%;border-collapse:collapse;margin-top:.5rem">
+      <thead>
+        <tr style="text-align:left">
+          <th style="padding:.15rem .5rem">param</th>
+          <th style="padding:.15rem .5rem">cart</th>
+          <th style="padding:.15rem .5rem">cookie</th>
+          <th style="padding:.15rem .5rem">storage</th>
+        </tr>
+      </thead>
+      <tbody id="aff-debug-rows"></tbody>
+    </table>
+  </div>
+  <script>
+    (function () {
+      // mirrors packages/shared/src/tracking.ts
+      var PARAMS = ['click_id', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid'];
+      var cart = {{ cart.attributes | json }} || {};
+      var cookie = {};
+      var storage = {};
+      try {
+        var m = document.cookie.match(/(?:^|; )_aff=([^;]*)/);
+        if (m) cookie = JSON.parse(decodeURIComponent(m[1]));
+      } catch (e) {}
+      try {
+        storage = JSON.parse(localStorage.getItem('aff_attribution') || '{}');
+      } catch (e) {}
+
+      var rows = document.getElementById('aff-debug-rows');
+      PARAMS.forEach(function (key) {
+        var tr = document.createElement('tr');
+        [key, cart[key], cookie[key], storage[key]].forEach(function (value, i) {
+          var td = document.createElement('td');
+          td.style.padding = '.15rem .5rem';
+          td.style.borderTop = '1px solid #e5e5e5';
+          if (i > 0 && !value) td.style.color = '#b00';
+          td.textContent = i === 0 ? value : value || '—';
+          tr.appendChild(td);
+        });
+        rows.appendChild(tr);
+      });
+    })();
+  </script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Attribution debug",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "visible",
+      "label": "Visible",
+      "default": true,
+      "info": "Shows the captured click_id and UTMs from cart, cookie and localStorage. Demo store only."
+    }
+  ],
+  "presets": [{ "name": "Attribution debug" }]
+}
+{% endschema %}

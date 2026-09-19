@@ -1,0 +1,262 @@
+{%- comment -%}
+  aff-tracking.liquid — affiliate attribution capture + Meta Pixel for storefront pages.
+
+  Rendered once from layout/theme.liquid, just before </head>, on every storefront page:
+
+      {% render 'aff-tracking', meta_pixel_id: '123456789012345' %}
+
+  What it does, in order:
+    1. Reads click_id, utm_*, fbclid from the URL.
+    2. Persists them to localStorage AND a first-party cookie (30 days).
+    3. Writes them onto the Shopify cart as attributes, which become the order's note_attributes
+       and are visible to the checkout pixel as checkout.customAttributes.
+    4. Loads the Meta Pixel and fires PageView (every page) and ViewContent (product pages),
+       each with its own event_id.
+
+  Theme Liquid never runs on checkout or the thank-you page; those events are fired by the
+  custom web pixel in shopify/pixels/meta-checkout.js. The two files split the work strictly so
+  no event is ever fired twice.
+
+  Constants below mirror packages/shared/src/tracking.ts. Change both or neither.
+{%- endcomment -%}
+{%- liquid
+  if template.name == 'product' and product
+    assign aff_variant = product.selected_or_first_available_variant
+  endif
+-%}
+<script>
+  (function () {
+    'use strict';
+
+    // ---- constants (mirrors packages/shared/src/tracking.ts) -------------------------------
+    var PARAMS = ['click_id', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid'];
+    var COOKIE_NAME = '_aff';
+    var STORAGE_KEY = 'aff_attribution';
+    var TTL_SECONDS = 30 * 24 * 60 * 60;
+
+    // ---- values only Liquid knows, serialised safely with | json --------------------------
+    var PIXEL_ID = {{ meta_pixel_id | json }};
+    var cartAttributes = {{ cart.attributes | json }} || {};
+    var cartItemCount = {{ cart.item_count | json }} || 0;
+    var product = {% if aff_variant %}{
+      id: {{ aff_variant.id | json }},
+      name: {{ product.title | json }},
+      price: {{ aff_variant.price | divided_by: 100.0 | json }},
+      currency: {{ cart.currency.iso_code | json }}
+    }{% else %}null{% endif %};
+
+    function warn(msg, err) {
+      // Tracking must never break the store; every failure is a console line, not an exception.
+      if (window.console) console.warn('[aff-tracking] ' + msg, err || '');
+    }
+
+    // ---- 1. capture --------------------------------------------------------------------------
+    function readUrl() {
+      var query = new URLSearchParams(window.location.search);
+      var found = {};
+      PARAMS.forEach(function (key) {
+        var value = query.get(key);
+        // Cap length: these end up in a cookie and on the order; a hostile 4 KB value would evict
+        // everything else in the cookie jar.
+        if (value) found[key] = value.slice(0, 200);
+      });
+      return found;
+    }
+
+    function readStored() {
+      try {
+        var raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (err) {
+        warn('localStorage unreadable', err);
+      }
+      // Fall back to the cookie: localStorage may be cleared or blocked while the cookie lives on.
+      var match = document.cookie.match(new RegExp('(?:^|; )' + COOKIE_NAME + '=([^;]*)'));
+      if (match) {
+        try {
+          return JSON.parse(decodeURIComponent(match[1]));
+        } catch (err) {
+          warn('cookie unreadable', err);
+        }
+      }
+      return null;
+    }
+
+    // The record is written atomically and the LAST landing with any attribution parameter wins.
+    // Merging field-by-field was rejected: it produces records that mix one affiliate's click_id
+    // with a later campaign's utm_source, which no network would accept as a valid attribution.
+    // A page load with no attribution parameters leaves the stored record untouched.
+    function resolve(stored, fromUrl) {
+      if (Object.keys(fromUrl).length > 0) {
+        fromUrl.landed_at = new Date().toISOString();
+        return fromUrl;
+      }
+      return stored;
+    }
+
+    // ---- 2. persist ---------------------------------------------------------------------------
+    // Both stores, because they fail differently: Safari caps JavaScript-set cookies at 7 days and
+    // consent tools clear cookies; localStorage escapes both but is invisible to the server and to
+    // the checkout sandbox. The auditor's click-ID check accepts either as evidence of survival.
+    function persist(record) {
+      var json = JSON.stringify(record);
+      try {
+        window.localStorage.setItem(STORAGE_KEY, json);
+      } catch (err) {
+        warn('localStorage write failed', err);
+      }
+      document.cookie =
+        COOKIE_NAME + '=' + encodeURIComponent(json) +
+        '; Max-Age=' + TTL_SECONDS + '; Path=/; SameSite=Lax' +
+        (window.location.protocol === 'https:' ? '; Secure' : '');
+    }
+
+    // ---- 3. attach to the cart ----------------------------------------------------------------
+    // Cart attributes become the order's note_attributes (admin: "Additional details") and reach
+    // the checkout pixel as checkout.customAttributes. This is the only bridge from a storefront
+    // click to a Shopify order that survives the locked-down checkout.
+    //
+    // Liquid renders the cart's current attributes into `cartAttributes`, so we can tell whether a
+    // sync is needed without a request. Only a difference triggers POST /cart/update.js; a cart
+    // that already carries this record costs nothing on subsequent pages.
+    //
+    // Shopify discards attributes written to an EMPTY cart: a cart only exists once it holds a
+    // line item. Observed on the dev store (order #1002 arrived with no attributes after a
+    // land-on-home → quick-add → checkout flow). So there are two sync points:
+    //   - page load, only when the cart already has items (Liquid knows item_count);
+    //   - the moment an item is added, by watching fetch() calls to /cart/add (see hookCartAdd),
+    //     because on modern themes that happens without a page load.
+    //
+    // Known gap, documented in shopify/README.md: "Buy it now" (dynamic checkout) bypasses the
+    // cart, so its orders never receive attributes. The dev store has those buttons disabled.
+    var syncing = false;
+
+    function syncCart(record, force) {
+      var attributes = {};
+      var changed = false;
+      PARAMS.forEach(function (key) {
+        var wanted = record[key] || '';
+        var current = cartAttributes[key] || '';
+        if (wanted !== current) changed = true;
+        // Sending '' clears a stale value left by an earlier landing.
+        if (wanted || current) attributes[key] = wanted;
+      });
+      if (!changed && !force) return;
+      if (syncing) return;
+      syncing = true;
+
+      fetch('/cart/update.js', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ attributes: attributes })
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          // Mirror what the server now holds so a later page-load comparison is accurate.
+          cartAttributes = attributes;
+        })
+        .catch(function (err) {
+          warn('cart attribute sync failed', err);
+        })
+        .then(function () {
+          syncing = false;
+        });
+    }
+
+    // Wraps window.fetch to notice when the theme adds a line item. This is the same technique
+    // attribution apps use, because Shopify exposes no cross-theme "item added" event. Only
+    // /cart/add is watched: that is the request that brings a cart into existence.
+    function hookCartAdd(onAdded) {
+      if (typeof window.fetch !== 'function') return;
+      var original = window.fetch;
+      window.fetch = function (input, init) {
+        var url = typeof input === 'string' ? input : (input && input.url) || '';
+        var result = original.apply(this, arguments);
+        if (/\/cart\/add(\.js)?(\?|$)/.test(url)) {
+          result.then(function (res) {
+            if (res.ok) onAdded();
+          }, function () {});
+        }
+        return result;
+      };
+    }
+
+    // ---- 4. Meta Pixel ------------------------------------------------------------------------
+    function eventId() {
+      // Every browser event carries its own ID so a server-side twin can be deduplicated against
+      // it. Storefront events have no server twin in this design, so a random ID is correct here;
+      // the Purchase event (in the checkout pixel) derives its ID from the order instead.
+      if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+      return 'ev-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+    }
+
+    function loadPixel() {
+      // Meta's standard base code, unmodified.
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+      document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq('init', PIXEL_ID);
+    }
+
+    function track(record, name, params) {
+      var id = eventId();
+      var payload = params || {};
+      // click_id rides along as a custom property (sent as cd[click_id]) so the pixel request
+      // itself shows which affiliate click this event belongs to.
+      if (record && record.click_id) payload.click_id = record.click_id;
+      window.fbq('track', name, payload, { eventID: id });
+      return id;
+    }
+
+    // ---- run ----------------------------------------------------------------------------------
+    function run() {
+      var record;
+      try {
+        record = resolve(readStored(), readUrl());
+        if (record) {
+          persist(record);
+          if (cartItemCount > 0) syncCart(record);
+          hookCartAdd(function () {
+            syncCart(record, true);
+          });
+        }
+      } catch (err) {
+        warn('attribution failed', err);
+      }
+
+      if (!PIXEL_ID) {
+        warn('no meta_pixel_id passed to {% raw %}{% render "aff-tracking" %}{% endraw %}; pixel not loaded');
+        return;
+      }
+      try {
+        loadPixel();
+        track(record, 'PageView');
+        if (product) {
+          track(record, 'ViewContent', {
+            content_ids: [String(product.id)],
+            content_type: 'product',
+            content_name: product.name,
+            value: product.price,
+            currency: product.currency
+          });
+        }
+      } catch (err) {
+        warn('pixel failed', err);
+      }
+    }
+
+    // Themes such as Horizon prerender pages the shopper merely hovers over (Speculation Rules).
+    // Scripts execute inside a prerendered page, so without this guard PageView fires for pages
+    // that are never shown: a silent over-count that no dashboard would flag. Deferring to
+    // activation means one PageView per page a person actually sees; a prerender that is
+    // discarded never tracks at all.
+    if (document.prerendering) {
+      document.addEventListener('prerenderingchange', run, { once: true });
+    } else {
+      run();
+    }
+  })();
+</script>

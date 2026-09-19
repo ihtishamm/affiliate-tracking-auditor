@@ -7,7 +7,7 @@ received postbacks and names the order IDs that went missing.
 
 **Live demo:** _M10_
 
-> Status: M0 (repo scaffold). Sections marked _Mn_ are written when that module lands.
+> Status: M1 (Shopify store + tracking snippet) in progress. Sections marked _Mn_ are written when that module lands.
 
 ## Tracking teardown: five ways attribution silently breaks on duplicate funnels
 
@@ -26,15 +26,16 @@ Shopify dev store          Advertorial domain        Auditor
                                                     Redis + BullMQ
 ```
 
-| Piece             | Where   | Why                                                                                                                                  |
-| ----------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `apps/web`        | Vercel  | Next.js App Router: dashboard, mock advertorial, postback receiver, API. Stateless, so serverless is a fit.                          |
-| `apps/worker`     | Railway | Node + Playwright, consumes BullMQ jobs. A headless browser needs a long-lived process with system libraries; Vercel cannot host it. |
-| `packages/checks` | library | The check engine as pure functions over a captured trace. Testable without a browser.                                                |
-| `packages/db`     | library | Drizzle schema and client. Append-only run and event tables; SQL migrations are committed.                                           |
-| `packages/shared` | library | Env validation (zod) and the structured logger.                                                                                      |
-| Postgres          | Neon    | Pooled endpoint, because Vercel functions cannot share a connection pool.                                                            |
-| Redis             | Railway | Job queue (BullMQ) and rate-limit counters, on the worker's private network.                                                         |
+| Piece             | Where                           | Why                                                                                                                                       |
+| ----------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`        | Vercel                          | Next.js App Router: dashboard, mock advertorial, postback receiver, API. Stateless, so serverless is a fit.                               |
+| `apps/worker`     | Railway                         | Node + Playwright, consumes BullMQ jobs. A headless browser needs a long-lived process with system libraries; Vercel cannot host it.      |
+| `packages/checks` | library                         | The check engine as pure functions over a captured trace. Testable without a browser.                                                     |
+| `packages/db`     | library                         | Drizzle schema and client. Append-only run and event tables; SQL migrations are committed.                                                |
+| `packages/shared` | library                         | Env validation (zod) and the structured logger.                                                                                           |
+| `shopify/`        | pasted into a Shopify dev store | The subject under test: attribution snippet, checkout pixel, debug panel. Not deployed by us; see [shopify/README.md](shopify/README.md). |
+| Postgres          | Neon                            | Pooled endpoint, because Vercel functions cannot share a connection pool.                                                                 |
+| Redis             | Railway                         | Job queue (BullMQ) and rate-limit counters, on the worker's private network.                                                              |
 
 ## PII handling
 

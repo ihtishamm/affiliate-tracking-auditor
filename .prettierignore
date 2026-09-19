@@ -4,3 +4,5 @@ dist
 pnpm-lock.yaml
 packages/db/drizzle
 PROJECT_CONTEXT.md
+# pasted verbatim into Shopify; contains Meta's canonical minified base code
+shopify/pixels
