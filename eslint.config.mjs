@@ -13,6 +13,7 @@ export default defineConfig([
     '**/dist/',
     '**/next-env.d.ts',
     'packages/db/drizzle/',
+    'packages/db/drizzle/',
   ]),
   {
     files: ['**/*.{ts,tsx,mts,mjs}'],

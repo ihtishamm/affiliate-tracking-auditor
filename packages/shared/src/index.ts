@@ -21,3 +21,18 @@ export {
   serializeBreakToggles,
 } from './break-it.ts';
 export type { BreakToggle, BreakToggleInfo } from './break-it.ts';
+export { hmacSha256, signBase64, signHex, verifyBase64, verifyHex } from './hmac.ts';
+export {
+  hashEmail,
+  hashPhone,
+  looksLikeSha256,
+  normaliseEmail,
+  normalisePhone,
+  sha256Hex,
+} from './pii.ts';
+export {
+  POSTBACK_SIGNATURE_HEADER,
+  postbackIdForOrder,
+  postbackPayloadSchema,
+} from './postback.ts';
+export type { PostbackPayload } from './postback.ts';

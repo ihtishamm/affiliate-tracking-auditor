@@ -20,6 +20,15 @@ export const webEnv = baseEnv.extend({
   // M2: the Meta Pixel the advertorial fires. Not a secret (it is in every page's HTML), but it
   // is per-deployment configuration, so it lives with the rest of the config.
   META_PIXEL_ID: z.string().regex(/^\d{5,20}$/),
+  // M3: verifies POST /api/postback. Also used by our own conversion sender to sign what it
+  // sends there. 32+ chars: `openssl rand -hex 32`.
+  POSTBACK_HMAC_SECRET: z.string().min(32),
+  // M3: the signing secret Shopify shows when a webhook is created in Settings → Notifications.
+  SHOPIFY_WEBHOOK_SECRET: z.string().min(16),
+  // M3: Conversions API system-user token from Events Manager → dataset → Settings.
+  META_CAPI_TOKEN: z.string().min(16),
+  // M3, optional: Events Manager → Test events code, so server events appear in that tool.
+  META_TEST_EVENT_CODE: z.string().optional(),
   // Injected by Vercel; surfaced by /api/health so a deploy can be matched to a commit.
   VERCEL_GIT_COMMIT_SHA: z.string().optional(),
 });

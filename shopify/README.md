@@ -55,6 +55,20 @@ checkout events. Neither fires an event the other does.
 3. The 15–16 digit **Dataset ID / Pixel ID** shown at the top is what both code files need.
 4. Keep the **Test events** tab open while you test: events appear there within seconds, with their event IDs.
 
+### 6. Order webhook (M3)
+
+1. **Settings → Notifications → Webhooks** (scroll to the bottom of Notifications) → **Create webhook**.
+2. Event **Order creation**, format **JSON**, URL `https://affiliate-tracking-auditor.vercel.app/api/webhooks/shopify/orders-create`, latest API version → Save.
+3. The Webhooks section now shows _"Your webhooks will be signed with …"_ followed by a secret. That is `SHOPIFY_WEBHOOK_SECRET` — one secret per store, shared by all its webhooks. Set it in Vercel (and locally) **before** merging M3, or the whole app fails env validation at boot.
+4. **Send test notification** on the webhook row delivers a sample order; it should answer 200 and appear in `shopify_webhook_events`.
+
+### 7. Conversions API token (M3)
+
+**Events Manager → Datasets → your dataset → Settings → Conversions API → Generate access token.**
+That is `META_CAPI_TOKEN`; it is a secret. The **Test events** tab shows a code such as
+`TEST63632`; set it as `META_TEST_EVENT_CODE` so server-side Purchases appear in that tab next to
+the browser ones, marked as deduplicated when the `event_id`s match.
+
 ## Verifying M1 (the done criterion)
 
 1. Visit the storefront with attribution parameters (enter the store password if asked):

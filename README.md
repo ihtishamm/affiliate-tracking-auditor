@@ -7,7 +7,7 @@ received postbacks and names the order IDs that went missing.
 
 **Live demo:** _M10_
 
-> Status: M2 (advertorial + break-it panel) in progress. Sections marked _Mn_ are written when that module lands.
+> Status: M3 (postback receiver, Shopify webhook, conversion sender) in progress. Sections marked _Mn_ are written when that module lands.
 
 ## Tracking teardown: five ways attribution silently breaks on duplicate funnels
 
@@ -64,6 +64,30 @@ stored server-side; a run is fully described by its URL.
 | `capi_mismatch`  | Server-side Purchase uses a random `event_id`                     | _from M3_                                                                                                                       | 6               |
 | `postback_500`   | Postback receiver answers 500                                     | _from M3_                                                                                                                       | 8               |
 
+## Postbacks, webhooks and the conversion sender
+
+Two inbound endpoints, both verified against the **raw request bytes** with a constant-time
+HMAC-SHA256 compare before anything is parsed, both idempotent through a **unique index plus
+`INSERT … ON CONFLICT DO NOTHING`** rather than a check-then-insert (which races):
+
+| Endpoint                                   | Signature                                                 | Dedup key            | Table                    |
+| ------------------------------------------ | --------------------------------------------------------- | -------------------- | ------------------------ |
+| `POST /api/postback`                       | `X-Postback-Signature`, hex, `POSTBACK_HMAC_SECRET`       | body `postback_id`   | `postback_events`        |
+| `POST /api/webhooks/shopify/orders-create` | `X-Shopify-Hmac-Sha256`, base64, `SHOPIFY_WEBHOOK_SECRET` | `X-Shopify-Event-Id` | `shopify_webhook_events` |
+
+Responses: `401` bad or missing signature (body never parsed, never logged); `400` valid
+signature but invalid body, with the reasons; `200 {status:"duplicate"}` for a replay, with no
+reprocessing; `200 {status:"accepted"}` otherwise.
+
+On an accepted order the app also plays the merchant's **conversion sender** (after the
+response is sent): a Conversions API `Purchase` to Meta with `event_id = purchase-<orderId>` —
+the same derivation the checkout pixel uses, so Meta deduplicates browser and server — and a
+signed S2S postback with `postback_id = pb-<orderId>`. Customer email and phone are normalised
+and SHA-256-hashed in memory for Meta and are never stored. Every attempt, success or failure,
+is a row in `conversion_attempts` (3 tries, backoff) — the only evidence of S2S traffic the
+auditor can have, since a browser never sees it. The reasoning for each of these choices is in
+the code: `packages/shared/src/hmac.ts`, `pii.ts`, `postback.ts`, `apps/web/lib/*`.
+
 ## PII handling
 
 _M4_
@@ -117,6 +141,10 @@ build step, and `tsc` is used only to type-check.
   `apps/worker/Dockerfile` and `/health`. Add a Redis service and set `REDIS_URL` to its
   private URL. Railway injects `PORT`.
 - **Neon**: create a project, use the pooled connection string as `DATABASE_URL`.
+
+Env vars added per module (all validated at boot, so set them **before** merging the module):
+M2 `SHOPIFY_STORE_DOMAIN`, `META_PIXEL_ID`; M3 `POSTBACK_HMAC_SECRET`, `SHOPIFY_WEBHOOK_SECRET`,
+`META_CAPI_TOKEN`, optional `META_TEST_EVENT_CODE`.
 
 Migrations are applied by hand from a machine with the production `DATABASE_URL`:
 `DATABASE_URL=... pnpm db:migrate` (a variable set in the shell takes precedence over `.env`).
