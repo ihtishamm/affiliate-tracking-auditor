@@ -13,3 +13,11 @@ export {
   purchaseEventId,
 } from './tracking.ts';
 export type { AttributionParam } from './tracking.ts';
+export {
+  BREAK_PARAM,
+  BREAK_TOGGLES,
+  BREAK_TOGGLE_INFO,
+  parseBreakToggles,
+  serializeBreakToggles,
+} from './break-it.ts';
+export type { BreakToggle, BreakToggleInfo } from './break-it.ts';

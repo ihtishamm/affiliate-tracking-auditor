@@ -19,8 +19,15 @@
 
 const PIXEL_ID = 'PASTE_YOUR_PIXEL_ID';
 
-// mirrors packages/shared/src/tracking.ts
+// mirrors packages/shared/src/tracking.ts and break-it.ts
 const CLICK_ID_ATTRIBUTE = 'click_id';
+const BREAK_ATTRIBUTE = '__break';
+
+// mirrors parseBreakToggles(), minus the known-name filter: an unknown toggle has no branch here.
+function toggles(checkout) {
+  const raw = attribute(checkout, BREAK_ATTRIBUTE) || '';
+  return raw.split(',').map((t) => t.trim()).filter(Boolean);
+}
 
 // mirrors purchaseEventId() in packages/shared/src/tracking.ts — read the rationale there.
 // The webhook handler (M3) derives the identical string from the order ID, which is what lets
@@ -77,7 +84,9 @@ function loadMetaPixel() {
 // One line per event in the browser console (Shopify prefixes it with the pixel name), so a
 // person with DevTools open can see what the sandbox sent without a Meta login.
 function send(name, params, eventID) {
-  fbq('track', name, params, { eventID: eventID });
+  // eventID === null is the strip_event_id sabotage: the event goes out with no dedup key.
+  if (eventID === null) fbq('track', name, params);
+  else fbq('track', name, params, { eventID: eventID });
   console.info('[meta-checkout] ' + name, { eventID: eventID, click_id: params.click_id });
 }
 
@@ -85,10 +94,11 @@ function send(name, params, eventID) {
 analytics.subscribe('checkout_started', (event) => {
   const checkout = event.data.checkout;
   const clickId = attribute(checkout, CLICK_ID_ATTRIBUTE);
+  const broken = toggles(checkout);
   send(
     'InitiateCheckout',
     Object.assign(contents(checkout), clickId ? { click_id: clickId } : {}),
-    randomEventId(),
+    broken.includes('strip_event_id') ? null : randomEventId(),
   );
 });
 
@@ -96,7 +106,10 @@ analytics.subscribe('checkout_completed', (event) => {
   const checkout = event.data.checkout;
   const clickId = attribute(checkout, CLICK_ID_ATTRIBUTE);
   const orderId = checkout.order && checkout.order.id;
-  const eventID = purchaseEventId(orderId) || randomEventId();
+  const broken = toggles(checkout);
+  const eventID = broken.includes('strip_event_id')
+    ? null
+    : purchaseEventId(orderId) || randomEventId();
 
   // Advanced matching. fbevents.js normalises (lower-case, trim; digits only for phone) and
   // SHA-256 hashes these before they leave the browser; the network shows ud[em]=<hash>. This is
@@ -111,6 +124,10 @@ analytics.subscribe('checkout_completed', (event) => {
   const purchase = contents(checkout);
   if (clickId) purchase.click_id = clickId;
   if (orderId) purchase.order_id = String(orderId);
+  // Sabotage: the email as a plaintext custom parameter (cd[email]=...). fbevents.js hashes what
+  // it is given through init(); it cannot protect a value smuggled in as custom data. This is
+  // what "we send the email to the pixel" turns into in the wild.
+  if (broken.includes('unhashed_email') && checkout.email) purchase.email = checkout.email;
   send('Purchase', purchase, eventID);
 });
 

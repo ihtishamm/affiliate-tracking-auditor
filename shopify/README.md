@@ -69,9 +69,20 @@ checkout events. Neither fires an event the other does.
 
 If step 5 shows no Additional details card, the attributes never reached the cart: check the Network tab for `cart/update.js` after the add-to-cart and look at its status.
 
+## Break-it toggles (M2)
+
+Both pasted files read the `__break` value (a comma-separated toggle list) that the snippet
+captures from the URL and writes as a cart attribute. In the snippet: `strip_event_id` sends
+events without an `event_id`, `double_fire` fires PageView twice. In the pixel:
+`strip_event_id` as above, `unhashed_email` adds the customer email as a plaintext custom
+parameter to Purchase. After pulling M2, re-paste `snippets/aff-tracking.liquid`,
+`sections/attribution-debug.liquid` (new `__break` row) and `pixels/meta-checkout.js`.
+
 ## What the dev store taught us (kept for the README teardown)
 
 - **Shopify discards attributes written to an empty cart.** Order #1002 arrived with no attribution after a land → quick-add → checkout flow. The snippet now syncs only when the cart has items and re-applies attributes after every `/cart/add`.
 - **Horizon prerenders pages on hover** (Speculation Rules), and scripts run inside the prerender. Without a `document.prerendering` guard, PageView fired for pages that were never shown — bursts of three in three seconds.
 - **Meta's minified base code assumes a `<script>` tag exists** to insert next to. Shopify's pixel sandbox is a bare document; the pixel loader now appends to `<head>`/root instead.
 - **Shopify's pixel editor lints against a fixed globals list**: bare `crypto` is flagged; `window.crypto` is not.
+- **Meta's pixel does not fire in headless Chrome.** With `HeadlessChrome` in the user agent, `fbevents.js` loads, drains its queue and sends nothing; with a normal Chrome UA (and `navigator.webdriver` still `true`) it fires. The auditor's runner (M4) must present a regular UA or every pixel check would fail on healthy funnels.
+- **Chromium coalesces identical in-flight script URLs.** Two byte-identical `<script src>` tags for one GTM container produce one network request; the `duplicate_gtm` toggle varies the second URL (`&l=dataLayer`, as a theme+app pair would) so both are observable on the wire.

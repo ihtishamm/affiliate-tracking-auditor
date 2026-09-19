@@ -30,6 +30,13 @@ export function startHealthServer(port: number, deps: HealthDeps): Server {
     });
   });
 
+  // A bind failure is a boot failure: say what happened in one line and stop, instead of the
+  // unhandled-'error' stack trace Node prints by default.
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    const hint = err.code === 'EADDRINUSE' ? ` (set WORKER_PORT to move the worker)` : '';
+    deps.log.error(`health server failed to listen on ${port}${hint}`, { err });
+    process.exit(1);
+  });
   server.listen(port, '0.0.0.0', () => deps.log.info('health server listening', { port }));
   return server;
 }

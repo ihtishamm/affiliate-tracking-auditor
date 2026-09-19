@@ -17,7 +17,12 @@
   custom web pixel in shopify/pixels/meta-checkout.js. The two files split the work strictly so
   no event is ever fired twice.
 
-  Constants below mirror packages/shared/src/tracking.ts. Change both or neither.
+  Break-it toggles (M2) arrive as the `__break` URL parameter, are captured and written to the
+  cart exactly like the attribution parameters, and change this snippet's behaviour:
+    strip_event_id  → events are sent without an event_id
+    double_fire     → PageView fires twice, with different event_ids
+
+  Constants below mirror packages/shared/src/tracking.ts and break-it.ts. Change both or neither.
 {%- endcomment -%}
 {%- liquid
   if template.name == 'product' and product
@@ -30,6 +35,9 @@
 
     // ---- constants (mirrors packages/shared/src/tracking.ts) -------------------------------
     var PARAMS = ['click_id', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid'];
+    // Not attribution, but travels the same road so every later stage can read it (mirrors break-it.ts).
+    var BREAK_PARAM = '__break';
+    var CAPTURED = PARAMS.concat([BREAK_PARAM]);
     var COOKIE_NAME = '_aff';
     var STORAGE_KEY = 'aff_attribution';
     var TTL_SECONDS = 30 * 24 * 60 * 60;
@@ -54,7 +62,7 @@
     function readUrl() {
       var query = new URLSearchParams(window.location.search);
       var found = {};
-      PARAMS.forEach(function (key) {
+      CAPTURED.forEach(function (key) {
         var value = query.get(key);
         // Cap length: these end up in a cookie and on the order; a hostile 4 KB value would evict
         // everything else in the cookie jar.
@@ -134,7 +142,7 @@
     function syncCart(record, force) {
       var attributes = {};
       var changed = false;
-      PARAMS.forEach(function (key) {
+      CAPTURED.forEach(function (key) {
         var wanted = record[key] || '';
         var current = cartAttributes[key] || '';
         if (wanted !== current) changed = true;
@@ -201,12 +209,28 @@
       window.fbq('init', PIXEL_ID);
     }
 
+    // mirrors parseBreakToggles() in packages/shared/src/break-it.ts, minus the known-name filter:
+    // an unknown toggle simply has no branch here.
+    function toggles(record) {
+      var raw = (record && record[BREAK_PARAM]) || '';
+      return raw.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
+    }
+
+    function has(record, toggle) {
+      return toggles(record).indexOf(toggle) !== -1;
+    }
+
     function track(record, name, params) {
-      var id = eventId();
       var payload = params || {};
       // click_id rides along as a custom property (sent as cd[click_id]) so the pixel request
       // itself shows which affiliate click this event belongs to.
       if (record && record.click_id) payload.click_id = record.click_id;
+      if (has(record, 'strip_event_id')) {
+        // Sabotage: no event_id, so a server-side twin can never be deduplicated against this.
+        window.fbq('track', name, payload);
+        return null;
+      }
+      var id = eventId();
       window.fbq('track', name, payload, { eventID: id });
       return id;
     }
@@ -234,6 +258,8 @@
       try {
         loadPixel();
         track(record, 'PageView');
+        // Sabotage: a second PageView with a different event_id, as two pixel installs would produce.
+        if (has(record, 'double_fire')) track(record, 'PageView');
         if (product) {
           track(record, 'ViewContent', {
             content_ids: [String(product.id)],

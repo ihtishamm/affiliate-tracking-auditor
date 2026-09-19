@@ -26,7 +26,7 @@
   <script>
     (function () {
       // mirrors packages/shared/src/tracking.ts
-      var PARAMS = ['click_id', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid'];
+      var PARAMS = ['click_id', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', '__break'];
       var cart = {{ cart.attributes | json }} || {};
       var cookie = {};
       var storage = {};

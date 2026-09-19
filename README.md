@@ -7,7 +7,7 @@ received postbacks and names the order IDs that went missing.
 
 **Live demo:** _M10_
 
-> Status: M1 (Shopify store + tracking snippet) in progress. Sections marked _Mn_ are written when that module lands.
+> Status: M2 (advertorial + break-it panel) in progress. Sections marked _Mn_ are written when that module lands.
 
 ## Tracking teardown: five ways attribution silently breaks on duplicate funnels
 
@@ -36,6 +36,33 @@ Shopify dev store          Advertorial domain        Auditor
 | `shopify/`        | pasted into a Shopify dev store | The subject under test: attribution snippet, checkout pixel, debug panel. Not deployed by us; see [shopify/README.md](shopify/README.md). |
 | Postgres          | Neon                            | Pooled endpoint, because Vercel functions cannot share a connection pool.                                                                 |
 | Redis             | Railway                         | Job queue (BullMQ) and rate-limit counters, on the worker's private network.                                                              |
+
+## Demo funnel and break-it panel
+
+The demo funnel is a duplicate affiliate funnel end to end: **advertorial** (`/advertorial`, this
+app) → **redirect** (`/go`, a real 302 that forwards `click_id` and UTMs into the store) →
+**Shopify dev store** (theme snippet + checkout pixel, see [shopify/README.md](shopify/README.md))
+→ Bogus Gateway order.
+
+Start it as an affiliate link would: [`/advertorial?click_id=demo-001&utm_source=affiliate&utm_medium=cpc&utm_campaign=demo`](https://affiliate-tracking-auditor.vercel.app/advertorial?click_id=demo-001&utm_source=affiliate&utm_medium=cpc&utm_campaign=demo).
+
+The **break-it panel** on the advertorial sabotages the funnel one realistic failure at a time.
+Toggle state travels as `__break=a,b` in the URL, is forwarded by `/go`, captured by the store
+snippet like a UTM, written as a cart attribute, and read by the checkout pixel from
+`checkout.customAttributes` (and from M3, by the webhook handler from the order). Nothing is
+stored server-side; a run is fully described by its URL.
+
+| Toggle           | What breaks                                                       | Verify by hand                                                                                                                  | Caught by check |
+| ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `drop_click_id`  | `/go` forwards UTMs but not `click_id`                            | Store URL has no `click_id`; debug panel `click_id` row is `—`; order has no `click_id`                                         | 3, 1            |
+| `strip_utms`     | `/go` drops `utm_*`                                               | Store URL has `click_id` but no `utm_*`                                                                                         | 2               |
+| `strip_event_id` | All pixel events sent without `event_id`                          | DevTools → Network → `facebook.com/tr`: no `eid=` on PageView/ViewContent; console `[meta-checkout]` lines show `eventID: null` | 5, 6            |
+| `double_fire`    | Storefront PageView fires twice, different `event_id`s            | Two `ev=PageView` requests per store page                                                                                       | 7               |
+| `duplicate_gtm`  | Same GTM container loaded twice on the advertorial                | Two `googletagmanager.com/gtm.js?id=GTM-AUD1T0R…` requests                                                                      | 7               |
+| `unhashed_email` | Checkout pixel sends the email in plaintext as a custom parameter | Purchase request has `cd[email]=…` in clear                                                                                     | 9               |
+| `consent_wall`   | Advertorial shows a consent bar; pixel does not load until Accept | No `facebook.com/tr` request on the advertorial until you click Accept                                                          | 10              |
+| `capi_mismatch`  | Server-side Purchase uses a random `event_id`                     | _from M3_                                                                                                                       | 6               |
+| `postback_500`   | Postback receiver answers 500                                     | _from M3_                                                                                                                       | 8               |
 
 ## PII handling
 
@@ -70,6 +97,8 @@ pnpm dev                                     # web on :3000, worker health on :8
 ```
 
 Then `curl localhost:3000/api/health` and `curl localhost:8080/health` should both return 200.
+If a port is taken, Next moves itself to the next free one (read its log line); move the worker
+with `WORKER_PORT=8090` in `.env`.
 
 Other commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm format`,
 `pnpm db:generate` (write a migration from schema changes), `pnpm db:migrate` (apply them).
@@ -80,8 +109,10 @@ build step, and `tsc` is used only to type-check.
 ## Deploy
 
 - **Vercel** (web): import the repo, set Root Directory to `apps/web`, add `DATABASE_URL`
-  (Neon pooled string) and set `ENABLE_EXPERIMENTAL_COREPACK=1` so the pnpm version comes from
-  `package.json`.
+  (Neon pooled string), `SHOPIFY_STORE_DOMAIN`, `META_PIXEL_ID`, and set
+  `ENABLE_EXPERIMENTAL_COREPACK=1` so the pnpm version comes from `package.json`. Env is
+  validated at boot, so a module that introduces a variable must have it set **before** its
+  branch merges, or every route (including `/api/health`) fails fast until it is.
 - **Railway** (worker): create a service from the repo; `railway.json` points it at
   `apps/worker/Dockerfile` and `/health`. Add a Redis service and set `REDIS_URL` to its
   private URL. Railway injects `PORT`.

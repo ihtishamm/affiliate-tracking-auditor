@@ -13,16 +13,27 @@ const baseEnv = z.object({
 
 export const webEnv = baseEnv.extend({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+  // M2: where /go sends the shopper. Hostname only, e.g. auditor-demo.myshopify.com.
+  SHOPIFY_STORE_DOMAIN: z
+    .string()
+    .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i, 'hostname only'),
+  // M2: the Meta Pixel the advertorial fires. Not a secret (it is in every page's HTML), but it
+  // is per-deployment configuration, so it lives with the rest of the config.
+  META_PIXEL_ID: z.string().regex(/^\d{5,20}$/),
   // Injected by Vercel; surfaced by /api/health so a deploy can be matched to a commit.
   VERCEL_GIT_COMMIT_SHA: z.string().optional(),
 });
 
-export const workerEnv = baseEnv.extend({
-  REDIS_URL: z.url({ protocol: /^rediss?$/ }),
-  // Railway injects PORT; the default is for local development.
-  PORT: z.coerce.number().int().positive().default(8080),
-  RAILWAY_GIT_COMMIT_SHA: z.string().optional(),
-});
+export const workerEnv = baseEnv
+  .extend({
+    REDIS_URL: z.url({ protocol: /^rediss?$/ }),
+    // The health server's port. WORKER_PORT exists so a developer can move the worker in the
+    // shared local .env without moving Next (which also honours PORT); Railway injects PORT.
+    WORKER_PORT: z.coerce.number().int().positive().optional(),
+    PORT: z.coerce.number().int().positive().optional(),
+    RAILWAY_GIT_COMMIT_SHA: z.string().optional(),
+  })
+  .transform((env) => ({ ...env, PORT: env.WORKER_PORT ?? env.PORT ?? 8080 }));
 
 export type WebEnv = z.infer<typeof webEnv>;
 export type WorkerEnv = z.infer<typeof workerEnv>;
