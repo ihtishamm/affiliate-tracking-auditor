@@ -1,0 +1,23 @@
+# Local development only: Postgres and Redis. Both apps run on the host via `pnpm dev`.
+# This is deliberately not a production topology (PROJECT_CONTEXT §4).
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: auditor
+      POSTGRES_PASSWORD: auditor
+      POSTGRES_DB: auditor
+    ports:
+      # Host ports are offset (5433, 6380) so a Postgres or Redis already installed on the
+      # developer's machine does not collide with these.
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6380:6379'
+
+volumes:
+  pgdata:

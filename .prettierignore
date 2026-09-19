@@ -1,0 +1,6 @@
+node_modules
+.next
+dist
+pnpm-lock.yaml
+packages/db/drizzle
+PROJECT_CONTEXT.md

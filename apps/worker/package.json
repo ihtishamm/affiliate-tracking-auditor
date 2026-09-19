@@ -1,0 +1,16 @@
+{
+  "name": "@auditor/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file-if-exists=../../.env --watch src/index.ts",
+    "start": "node src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@auditor/shared": "workspace:*",
+    "ioredis": "5.11.1",
+    "playwright": "1.63.0"
+  }
+}

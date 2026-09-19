@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+# Blocks any commit whose staged changes contain a secret (PROJECT_CONTEXT §7).
+# Enable once per clone:  git config core.hooksPath .githooks
+#
+# The hook refuses to run without gitleaks rather than silently passing: a secret scanner that
+# is skipped when absent is not a secret scanner. CI runs the same scan on every push as the
+# backstop, since hooks can always be bypassed locally.
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not installed, refusing to commit unscanned changes." >&2
+  echo "  install: https://github.com/gitleaks/gitleaks#installing" >&2
+  echo "  (Ubuntu/Debian: apt install gitleaks   macOS: brew install gitleaks)" >&2
+  exit 1
+fi
+
+# gitleaks renamed its staged-diff scan in 8.19: `protect --staged` became `git --pre-commit
+# --staged`. Distro packages lag (Ubuntu 24.04 ships 8.16), so support both rather than
+# forcing everyone onto a release binary.
+if gitleaks git --help >/dev/null 2>&1; then
+  exec gitleaks git --pre-commit --staged --redact --verbose
+else
+  exec gitleaks protect --staged --redact --verbose
+fi
