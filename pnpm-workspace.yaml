@@ -8,6 +8,8 @@ packages:
 # Declining them means `pnpm install` executes no third-party code on this machine or in CI.
 allowBuilds:
   esbuild: false
+  # bullmq → msgpackr → optional native accelerator; msgpackr falls back to pure JS without it.
+  msgpackr-extract: false
   unrs-resolver: false
 
 minimumReleaseAgeExclude:

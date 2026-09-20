@@ -15,6 +15,7 @@ WORKDIR /app
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY apps/worker/package.json apps/worker/
 COPY packages/shared/package.json packages/shared/
+COPY packages/db/package.json packages/db/
 # `@auditor/worker...` = the worker and everything it depends on inside the workspace.
 RUN pnpm install --frozen-lockfile --filter "@auditor/worker..."
 
@@ -23,6 +24,7 @@ RUN pnpm install --frozen-lockfile --filter "@auditor/worker..."
 COPY tsconfig.base.json ./
 COPY apps/worker apps/worker
 COPY packages/shared packages/shared
+COPY packages/db packages/db
 
 # Never run Chromium as root.
 USER pwuser

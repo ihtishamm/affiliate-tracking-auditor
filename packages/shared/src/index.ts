@@ -36,3 +36,31 @@ export {
   postbackPayloadSchema,
 } from './postback.ts';
 export type { PostbackPayload } from './postback.ts';
+// ssrf.ts is NOT re-exported here: it imports node:net and node:dns, and this entry point is
+// also bundled into the browser by the advertorial's client components. Server code imports
+// it from '@auditor/shared/ssrf'.
+export type { SsrfOptions, SsrfVerdict } from './ssrf.ts';
+export { classifyParam, redactBody, redactParams, redactQuery, redactUrl } from './redact.ts';
+export type { BodyKind, KnownIdentity, ParamMap, ParamValue, RedactedBody } from './redact.ts';
+export {
+  DLQ_NAME,
+  FUNNEL_STEPS,
+  QUEUE_NAME,
+  RUN_LIMITS,
+  RUN_STATUSES,
+  TERMINAL_STATUSES,
+  pageSnapshotSchema,
+  runJobSchema,
+  runSubmissionSchema,
+  runTraceSchema,
+  traceRequestSchema,
+} from './run.ts';
+export type {
+  FunnelStep,
+  PageSnapshot,
+  RunJob,
+  RunStatus,
+  RunSubmission,
+  RunTrace,
+  TraceRequest,
+} from './run.ts';

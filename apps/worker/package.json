@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@auditor/db": "workspace:*",
     "@auditor/shared": "workspace:*",
+    "bullmq": "6.3.8",
     "ioredis": "5.11.1",
     "playwright": "1.63.0"
   }

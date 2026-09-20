@@ -5,7 +5,11 @@ import { defineConfig } from 'vitest/config';
 // postback/webhook decision cores (apps/web/lib).
 export default defineConfig({
   test: {
-    include: ['packages/**/*.test.ts', 'apps/web/lib/**/*.test.ts'],
+    include: [
+      'packages/**/*.test.ts',
+      'apps/web/lib/**/*.test.ts',
+      'apps/worker/test/**/*.test.ts',
+    ],
     passWithNoTests: true,
   },
 });

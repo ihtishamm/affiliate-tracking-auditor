@@ -6,7 +6,9 @@ export type Probe = () => Promise<ProbeResult>;
 
 export interface HealthDeps {
   version: string;
-  probes: { redis: Probe; browser: Probe };
+  probes: Record<string, Probe>;
+  /** Informational fields appended to the body (queue depth); never affect the status code. */
+  extra?: () => Promise<Record<string, unknown>>;
   log: Logger;
 }
 
@@ -22,11 +24,17 @@ export function startHealthServer(port: number, deps: HealthDeps): Server {
       res.writeHead(404).end();
       return;
     }
-    void Promise.all([deps.probes.redis(), deps.probes.browser()]).then(([redis, browser]) => {
-      const ok = redis === 'ok' && browser === 'ok';
+    const names = Object.keys(deps.probes);
+    void Promise.all([
+      Promise.all(names.map((n) => deps.probes[n]?.() ?? Promise.resolve<ProbeResult>('error'))),
+      deps.extra?.().catch(() => ({})) ?? Promise.resolve({}),
+    ]).then(([results, extra]) => {
+      const ok = results.every((r) => r === 'ok');
+      const body: Record<string, unknown> = { ok, version: deps.version, ...extra };
+      names.forEach((n, i) => (body[n] = results[i]));
       res
         .writeHead(ok ? 200 : 503, { 'content-type': 'application/json' })
-        .end(JSON.stringify({ ok, redis, browser, version: deps.version }));
+        .end(JSON.stringify(body));
     });
   });
 

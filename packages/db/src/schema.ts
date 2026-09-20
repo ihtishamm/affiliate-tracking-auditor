@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   jsonb,
   numeric,
@@ -12,7 +13,6 @@ import {
 
 // Tables arrive one module at a time (PROJECT_CONTEXT §6). Every table here is append-only:
 // rows are inserted, never updated or deleted (§11). Planned for later modules:
-//   M4: runs, run_traces (the one table with a 7-day TTL, §8)
 //   M5: check_results     M7: reconciliations     M8: funnels, funnel_scores, alerts
 
 /**
@@ -88,3 +88,67 @@ export const conversionAttempts = pgTable('conversion_attempts', {
   piiHashed: boolean('pii_hashed'),
   sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ---- M4: runs ------------------------------------------------------------------------------------
+//
+// A run's lifecycle is queued → running → succeeded | failed | timed_out, and "append-only"
+// (§5, §11) is taken literally: `runs` is the immutable submission, `run_events` is the log of
+// status transitions, and the current status is the latest event. Nothing is ever UPDATEd, so
+// the history of a run — including the retries BullMQ made — is always readable. The one
+// exception in the whole schema is `run_traces`, which §8 requires to expire after 7 days.
+
+/** One row per accepted submission. `idempotency_key` comes from the form; a double-click loses the unique-index race and gets the same run. */
+export const runs = pgTable(
+  'runs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    idempotencyKey: text('idempotency_key').notNull(),
+    /** The submitted URL after redactUrl(): PII-looking query values are already gone. */
+    url: text('url').notNull(),
+    urlHost: text('url_host').notNull(),
+    clickIdParam: text('click_id_param').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('runs_idempotency_key_idx').on(t.idempotencyKey)],
+);
+
+/** Status transitions, appended by the web app (queued) and the worker (everything else). */
+export const runEvents = pgTable(
+  'run_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    runId: uuid('run_id')
+      .notNull()
+      .references(() => runs.id),
+    /** 'queued' | 'running' | 'succeeded' | 'failed' | 'timed_out' — see RUN_STATUSES. */
+    status: text('status').notNull(),
+    /** BullMQ attempt number (1-based); 0 for the submission itself. */
+    attempt: integer('attempt').notNull(),
+    /** Free-form, small: stop reason, error message, worker version, duration. Never trace data. */
+    detail: jsonb('detail').$type<Record<string, unknown>>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('run_events_run_id_created_at_idx').on(t.runId, t.createdAt)],
+);
+
+/**
+ * The run artifact: a RunTrace (packages/shared/src/run.ts), redacted before it got here.
+ * Deleted by the worker's cleanup once `expires_at` passes — the only DELETE in the system.
+ */
+export const runTraces = pgTable(
+  'run_traces',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    runId: uuid('run_id')
+      .notNull()
+      .references(() => runs.id),
+    trace: jsonb('trace').notNull(),
+    bytes: integer('bytes').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('run_traces_run_id_idx').on(t.runId),
+    index('run_traces_expires_at_idx').on(t.expiresAt),
+  ],
+);
