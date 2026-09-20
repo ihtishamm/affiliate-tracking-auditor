@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { TERMINAL_STATUSES } from '@auditor/shared';
+import { reportFor } from '@/lib/checks.ts';
 import { getDb } from '@/lib/db.ts';
 import { getRun } from '@/lib/store.ts';
 
@@ -14,10 +15,12 @@ export const dynamic = 'force-dynamic';
 export default async function RunPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
-  const run = await getRun(getDb(), id, { trace: true });
+  const db = getDb();
+  const run = await getRun(db, id, { trace: true });
   if (!run) notFound();
   const terminal = TERMINAL_STATUSES.has(run.status);
   const trace = run.trace;
+  const report = trace ? await reportFor(db, trace) : null;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
@@ -42,6 +45,46 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
           </li>
         ))}
       </ul>
+
+      {report && (
+        <>
+          <h2 className="mt-8 text-lg font-semibold">
+            Checks{' '}
+            <span className="font-normal text-neutral-500">
+              {report.counts.pass} pass · {report.counts.fail} fail · {report.counts.inconclusive}{' '}
+              inconclusive
+              {report.score !== null && ` · score ${Math.round(report.score * 100)}%`}
+            </span>
+          </h2>
+          <ol className="mt-2 space-y-2 text-sm">
+            {report.results.map((c) => (
+              <li key={c.id} className="rounded border border-neutral-200 p-3">
+                <div className="flex items-baseline gap-2">
+                  <span
+                    className={
+                      c.status === 'pass'
+                        ? 'font-mono text-green-700'
+                        : c.status === 'fail'
+                          ? 'font-mono text-red-700'
+                          : 'font-mono text-neutral-500'
+                    }
+                  >
+                    {c.status}
+                  </span>
+                  <span className="font-semibold">
+                    {c.number}. {c.title}
+                  </span>
+                </div>
+                <p className="mt-1">{c.observed}</p>
+                <p className="text-neutral-500">
+                  Expected: {c.expected}. {c.reason}.
+                </p>
+                {c.fixHint && <p className="mt-1 text-neutral-700">Fix: {c.fixHint}</p>}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
 
       {trace && (
         <>

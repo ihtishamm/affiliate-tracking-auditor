@@ -22,10 +22,33 @@ const PIXEL_ID = 'PASTE_YOUR_PIXEL_ID';
 // mirrors packages/shared/src/tracking.ts and break-it.ts
 const CLICK_ID_ATTRIBUTE = 'click_id';
 const BREAK_ATTRIBUTE = '__break';
+const ATTRIBUTION_COOKIE = '_aff';
+
+// Where the attribution record comes from, in order:
+//   1. the `_aff` cookie the storefront snippet wrote (same first-party domain as checkout;
+//      the Web Pixels API exposes it through browser.cookie.get);
+//   2. checkout.customAttributes, i.e. the cart attributes.
+// The cookie is first because the cart attributes were observed NOT to reach the pixel:
+// on this store, checkout_started and checkout_completed arrived with customAttributes empty
+// while the same cart's attributes did reach the order's note_attributes. The two are
+// different Shopify pathways; the order is fine, the pixel needed its own.
+async function attribution(checkout) {
+  const record = {};
+  try {
+    const raw = await browser.cookie.get(ATTRIBUTION_COOKIE);
+    if (raw) Object.assign(record, JSON.parse(decodeURIComponent(raw)));
+  } catch (err) {
+    console.warn('[meta-checkout] attribution cookie unreadable', err);
+  }
+  (checkout.customAttributes || []).forEach((a) => {
+    if (a && a.key && record[a.key] === undefined) record[a.key] = a.value;
+  });
+  return record;
+}
 
 // mirrors parseBreakToggles(), minus the known-name filter: an unknown toggle has no branch here.
-function toggles(checkout) {
-  const raw = attribute(checkout, BREAK_ATTRIBUTE) || '';
+function toggles(record) {
+  const raw = record[BREAK_ATTRIBUTE] || '';
   return raw.split(',').map((t) => t.trim()).filter(Boolean);
 }
 
@@ -44,11 +67,6 @@ function randomEventId() {
   return c && c.randomUUID
     ? c.randomUUID()
     : 'ev-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
-}
-
-function attribute(checkout, name) {
-  const found = (checkout.customAttributes || []).find((a) => a.key === name);
-  return found ? found.value : undefined;
 }
 
 function contents(checkout) {
@@ -91,10 +109,11 @@ function send(name, params, eventID) {
 }
 
 // Subscribe first, load second: a failure inside the pixel loader must not cost us the events.
-analytics.subscribe('checkout_started', (event) => {
+analytics.subscribe('checkout_started', async (event) => {
   const checkout = event.data.checkout;
-  const clickId = attribute(checkout, CLICK_ID_ATTRIBUTE);
-  const broken = toggles(checkout);
+  const record = await attribution(checkout);
+  const clickId = record[CLICK_ID_ATTRIBUTE];
+  const broken = toggles(record);
   send(
     'InitiateCheckout',
     Object.assign(contents(checkout), clickId ? { click_id: clickId } : {}),
@@ -102,11 +121,12 @@ analytics.subscribe('checkout_started', (event) => {
   );
 });
 
-analytics.subscribe('checkout_completed', (event) => {
+analytics.subscribe('checkout_completed', async (event) => {
   const checkout = event.data.checkout;
-  const clickId = attribute(checkout, CLICK_ID_ATTRIBUTE);
+  const record = await attribution(checkout);
+  const clickId = record[CLICK_ID_ATTRIBUTE];
   const orderId = checkout.order && checkout.order.id;
-  const broken = toggles(checkout);
+  const broken = toggles(record);
   const eventID = broken.includes('strip_event_id')
     ? null
     : purchaseEventId(orderId) || randomEventId();

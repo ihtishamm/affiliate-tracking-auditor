@@ -282,15 +282,24 @@ export class TraceCollector {
     return snap;
   }
 
-  /** The order, learned from the Purchase pixel hit the way Meta learns it: `eid=purchase-<id>`. */
+  /**
+   * The order, learned from the Purchase pixel hit the way Meta learns it: `eid=purchase-<id>`
+   * first, else the `order_id` custom parameter. A pixel that sends neither (a stranger's
+   * funnel, or one with event ids stripped and no order id) leaves the order unknown, and the
+   * server-side checks say so rather than guess.
+   */
   orderFromTrace(): RunTrace['order'] {
     for (const r of this.requests) {
       if (!/(^|\.)facebook\.com$/.test(r.host) || !r.url.includes('/tr')) continue;
       const ev = r.params['ev'];
+      if (ev?.kind !== 'value' || ev.value !== 'Purchase') continue;
       const eid = r.params['eid'];
-      if (ev?.kind !== 'value' || ev.value !== 'Purchase' || eid?.kind !== 'value') continue;
-      const digits = /^purchase-(\d+)$/.exec(eid.value)?.[1];
-      if (digits) return { id: digits, purchaseEventId: eid.value };
+      const eidDigits = eid?.kind === 'value' ? /^purchase-(\d+)$/.exec(eid.value)?.[1] : undefined;
+      if (eidDigits && eid?.kind === 'value') return { id: eidDigits, purchaseEventId: eid.value };
+      const orderParam = r.params['cd[order_id]'];
+      const digits =
+        orderParam?.kind === 'value' ? /(\d+)$/.exec(orderParam.value)?.[1] : undefined;
+      if (digits) return { id: digits, purchaseEventId: eid?.kind === 'value' ? eid.value : null };
     }
     return null;
   }

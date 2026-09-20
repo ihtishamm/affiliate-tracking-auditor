@@ -193,6 +193,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@auditor/checks':
+        specifier: workspace:*
+        version: link:../../packages/checks
       '@auditor/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -249,7 +252,11 @@ importers:
         specifier: 1.63.0
         version: 1.63.0
 
-  packages/checks: {}
+  packages/checks:
+    dependencies:
+      '@auditor/shared':
+        specifier: workspace:*
+        version: link:../shared
 
   packages/db:
     dependencies:

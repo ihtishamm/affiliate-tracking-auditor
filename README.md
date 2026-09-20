@@ -7,7 +7,7 @@ received postbacks and names the order IDs that went missing.
 
 **Live demo:** _M10_
 
-> Status: M4 (queue and Playwright runner) in progress. Sections marked _Mn_ are written when that module lands.
+> Status: M5 (check engine) in progress. Sections marked _Mn_ are written when that module lands.
 
 ## Tracking teardown: five ways attribution silently breaks on duplicate funnels
 
@@ -48,16 +48,16 @@ Start it as an affiliate link would: [`/advertorial?click_id=demo-001&utm_source
 
 The **break-it panel** on the advertorial sabotages the funnel one realistic failure at a time.
 Toggle state travels as `__break=a,b` in the URL, is forwarded by `/go`, captured by the store
-snippet like a UTM, written as a cart attribute, and read by the checkout pixel from
-`checkout.customAttributes` (and from M3, by the webhook handler from the order). Nothing is
-stored server-side; a run is fully described by its URL.
+snippet like a UTM into the `_aff` cookie and the cart attributes, and read by the checkout
+pixel from the cookie (and from M3, by the webhook handler from the order's `note_attributes`).
+Nothing is stored server-side; a run is fully described by its URL.
 
 | Toggle           | What breaks                                                       | Verify by hand                                                                                                                  | Caught by check |
 | ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | `drop_click_id`  | `/go` forwards UTMs but not `click_id`                            | Store URL has no `click_id`; debug panel `click_id` row is `—`; order has no `click_id`                                         | 3, 1            |
 | `strip_utms`     | `/go` drops `utm_*`                                               | Store URL has `click_id` but no `utm_*`                                                                                         | 2               |
 | `strip_event_id` | All pixel events sent without `event_id`                          | DevTools → Network → `facebook.com/tr`: no `eid=` on PageView/ViewContent; console `[meta-checkout]` lines show `eventID: null` | 5, 6            |
-| `double_fire`    | Storefront PageView fires twice, different `event_id`s            | Two `ev=PageView` requests per store page                                                                                       | 7               |
+| `double_fire`    | Storefront PageView also sent as the `<noscript>` fallback image  | Two `ev=PageView` requests per store page, one without `eid`                                                                    | 7               |
 | `duplicate_gtm`  | Same GTM container loaded twice on the advertorial                | Two `googletagmanager.com/gtm.js?id=GTM-AUD1T0R…` requests                                                                      | 7               |
 | `unhashed_email` | Checkout pixel sends the email in plaintext as a custom parameter | Purchase request has `cd[email]=…` in clear                                                                                     | 9               |
 | `consent_wall`   | Advertorial shows a consent bar; pixel does not load until Accept | No `facebook.com/tr` request on the advertorial until you click Accept                                                          | 10              |
@@ -119,7 +119,34 @@ Design points worth knowing:
   `eid=purchase-<orderId>`; the runner reads it the way Meta does, which is what lets M5 join
   the browser trace to the webhook, CAPI and postback rows for the same order.
 - **Limits** (`RUN_LIMITS`): 5 runs/hour/IP, 20 queued jobs, 2 concurrent runs, 10 redirect
-  hops, 2 000 requests per trace.
+  hops, 4 000 requests per trace.
+
+## The ten checks
+
+`packages/checks` is pure: `runChecks({ trace, server })` over the run's trace and the M3 rows
+for its order, no I/O. Each check answers `pass`, `fail` or `inconclusive` with what it
+observed, what it expected, why, and a fix hint. `inconclusive` is the answer whenever the
+funnel stopped before the evidence exists (a stranger's funnel never reaches a purchase, so
+checks 6 and 8 are inconclusive there) — it is never a `fail`. Score = passes ÷ (passes +
+fails). The rationale for every check — what breaks in the real world when it fails — is in
+[`packages/checks/README.md`](packages/checks/README.md).
+
+| #   | Check                     | Decided from                                                                    |
+| --- | ------------------------- | ------------------------------------------------------------------------------- |
+| 1   | Click ID persistence      | where the expected click ID was found on each page, and cart-attribute writes   |
+| 2   | UTM survival              | the query of every hop to the store, then the attribution record at checkout    |
+| 3   | Cross-domain handoff      | the first hop whose host changes, and the first store page                      |
+| 4   | Pixel load and fire order | first occurrence of PageView → ViewContent → InitiateCheckout → Purchase        |
+| 5   | event_id present          | `eid` on every standard pixel event                                             |
+| 6   | CAPI dedup match          | browser Purchase `eid` vs the server's `conversion_attempts` row                |
+| 7   | Duplicate containers      | container ids per page's scripts; PageViews per document (by time)              |
+| 8   | Postback fired            | `postback_events` and every `conversion_attempts` try for the order             |
+| 9   | PII hashing               | the redactor's verdicts (`looksHashed`, algorithm, `normalised`) — never values |
+| 10  | Consent blocking          | a visible banner on a page from which no pixel event fired                      |
+
+Reports are computed when a run is read, not stored: the server rows arrive seconds after
+the run ends, and a report frozen at completion would stay inconclusive about events that
+exist. The tests run the engine over real traces of the demo funnel, one per break-it toggle.
 
 ## PII handling
 

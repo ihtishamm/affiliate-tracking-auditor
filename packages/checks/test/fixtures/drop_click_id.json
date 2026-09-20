@@ -1,0 +1,2345 @@
+{
+  "version": 1,
+  "runId": "52053609-ed6d-430e-a6ad-322ec15170a1",
+  "startedAt": "2026-09-20T02:49:07.264Z",
+  "finishedAt": "2026-09-20T02:50:00.910Z",
+  "entryUrl": "http://localhost:3001/advertorial?__break=drop_click_id&click_id=aud-52053609&utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609",
+  "injected": {
+    "clickId": "aud-52053609",
+    "utm": {
+      "utm_medium": "audit",
+      "utm_source": "auditor",
+      "utm_campaign": "run-52053609"
+    }
+  },
+  "clickIdParam": "click_id",
+  "expectedClickId": "aud-52053609",
+  "mode": "purchase",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+  "robots": {
+    "fetched": true,
+    "status": 404,
+    "allowed": true,
+    "matchedRule": null
+  },
+  "cta": {
+    "rule": "cta-text",
+    "href": "http://localhost:3001/go?click_id=aud-52053609&utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id&path=%2Fcollections%2Fall",
+    "text": "Get 20% off your first tub →"
+  },
+  "hops": [
+    {
+      "t": 117,
+      "from": "",
+      "to": "http://localhost:3001/advertorial?__break=drop_click_id&click_id=aud-52053609&utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609",
+      "status": 200,
+      "kind": "navigate"
+    },
+    {
+      "t": 3902,
+      "from": "http://localhost:3001/advertorial?__break=drop_click_id&click_id=aud-52053609&utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609",
+      "to": "http://localhost:3001/go?click_id=aud-52053609&utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id&path=%2Fcollections%2Fall",
+      "status": 302,
+      "kind": "navigate"
+    },
+    {
+      "t": 3929,
+      "from": "http://localhost:3001/go?click_id=aud-52053609&utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id&path=%2Fcollections%2Fall",
+      "to": "https://auditor-demo.myshopify.com/collections/all?utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id",
+      "status": 302,
+      "kind": "redirect"
+    },
+    {
+      "t": 4175,
+      "from": "https://auditor-demo.myshopify.com/collections/all?utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id",
+      "to": "https://auditor-demo.myshopify.com/password",
+      "status": 200,
+      "kind": "redirect"
+    },
+    {
+      "t": 5533,
+      "from": "https://auditor-demo.myshopify.com/password",
+      "to": "https://auditor-demo.myshopify.com/password",
+      "status": 302,
+      "kind": "navigate"
+    },
+    {
+      "t": 5857,
+      "from": "https://auditor-demo.myshopify.com/password",
+      "to": "https://auditor-demo.myshopify.com/",
+      "status": 200,
+      "kind": "redirect"
+    },
+    {
+      "t": 8186,
+      "from": "https://auditor-demo.myshopify.com/",
+      "to": "https://auditor-demo.myshopify.com/collections/all?utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id",
+      "status": 200,
+      "kind": "navigate"
+    },
+    {
+      "t": 17993,
+      "from": "https://auditor-demo.myshopify.com/collections/all?utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id",
+      "to": "https://auditor-demo.myshopify.com/products/gift-card",
+      "status": 200,
+      "kind": "navigate"
+    },
+    {
+      "t": 27227,
+      "from": "https://auditor-demo.myshopify.com/products/gift-card",
+      "to": "https://auditor-demo.myshopify.com/cart",
+      "status": 200,
+      "kind": "navigate"
+    },
+    {
+      "t": 35619,
+      "from": "https://auditor-demo.myshopify.com/cart",
+      "to": "https://auditor-demo.myshopify.com/cart",
+      "status": 302,
+      "kind": "navigate"
+    },
+    {
+      "t": 35947,
+      "from": "https://auditor-demo.myshopify.com/cart",
+      "to": "https://auditor-demo.myshopify.com/checkouts/cn/hWNH2C2d9dIqfpnaHRxgBp8V/en-us?_r=AQABLW1TXJ4vaotunSGXWXTpnmUt1x7s73zgeVmqp9l9YDk",
+      "status": 200,
+      "kind": "redirect"
+    }
+  ],
+  "steps": [
+    {
+      "step": "landing",
+      "t": 3797,
+      "url": "http://localhost:3001/advertorial?__break=drop_click_id&click_id=aud-52053609&utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609",
+      "title": "Affiliate Tracking Auditor",
+      "cookies": [
+        {
+          "name": "_fbp",
+          "value": null
+        }
+      ],
+      "localStorageKeys": ["lastExternalReferrer", "lastExternalReferrerTime"],
+      "attribution": {
+        "clickId": "aud-52053609",
+        "utm": {
+          "utm_medium": "audit",
+          "utm_source": "auditor",
+          "utm_campaign": "run-52053609"
+        },
+        "foundIn": {
+          "cookies": [],
+          "localStorage": [],
+          "url": true
+        },
+        "source": "url"
+      },
+      "scripts": [
+        "https://connect.facebook.net/signals/config/1541349738037398?v=2.9.403&r=stable&domain=localhost&hme=ecef7557496abce7ebfd30d9fec7f02b78383ffbf3f454783aea671f0dea1dfc&ex_m=117%2C234%2C168%2C27%2C81%2C82%2C160%2C77%2C76%2C11%2C178%2C101%2C20%2C152%2C140%2C46%2C84%2C89%2C148%2C173%2C180%2C8%2C4%2C5%2C7%2C6%2C3%2C102%2C114%2C32%2C17%2C31%2C18%2C33%2C34%2C35%2C37%2C55%2C161%2C86%2C125%2C22%2C24%2C51%2C47%2C49%2C48%2C94%2C103%2C107%2C123%2C159%2C162%2C53%2C124%2C29%2C26%2C132%2C78%2C43%2C164%2C163%2C165%2C156%2C154%2C30%2C42%2C66%2C122%2C175%2C79%2C21%2C127%2C92%2C75%2C23%2C96%2C97%2C129%2C95%2C150%2C149%2C153%2C108%2C174%2C177%2C41%2C56%2C126%2C54%2C182%2C109%2C181%2C201%2C248%2C83%2C262%2C261%2C260%2C14%2C25%2C28%2C40%2C62%2C116%2C68%2C10%2C72%2C110%2C111%2C112%2C118%2C143%2C38%2C36%2C145%2C146%2C147%2C142%2C141%2C169%2C85%2C172%2C170%2C171%2C57%2C67%2C136%2C19%2C176%2C52%2C311%2C312%2C313%2C310%2C326%2C351%2C241%2C230%2C69%2C231%2C229%2C354%2C345",
+        "https://connect.facebook.net/en_US/fbevents.js"
+      ],
+      "consent": {
+        "bannerVisible": false,
+        "matched": null
+      }
+    },
+    {
+      "step": "store",
+      "t": 14915,
+      "url": "https://auditor-demo.myshopify.com/collections/all?utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id",
+      "title": "Products – auditor-demo",
+      "cookies": [
+        {
+          "name": "_shopify_y",
+          "value": null
+        },
+        {
+          "name": "_shopify_s",
+          "value": null
+        },
+        {
+          "name": "localization",
+          "value": null
+        },
+        {
+          "name": "cart_currency",
+          "value": null
+        },
+        {
+          "name": "_shopify_analytics",
+          "value": null
+        },
+        {
+          "name": "_shopify_marketing",
+          "value": null
+        },
+        {
+          "name": "_fbp",
+          "value": null
+        },
+        {
+          "name": "_aff",
+          "value": "%7B%22utm_source%22%3A%22auditor%22%2C%22utm_medium%22%3A%22audit%22%2C%22utm_campaign%22%3A%22run-52053609%22%2C%22__break%22%3A%22drop_click_id%22%2C%22landed_at%22%3A%222026-09-20T02%3A49%3A16.187Z%22%7D"
+        },
+        {
+          "name": "_shopify_essential",
+          "value": null
+        }
+      ],
+      "localStorageKeys": [
+        "shopify:webmcp_adapter_loaded",
+        "lastExternalReferrer",
+        "lastExternalReferrerTime",
+        "aff_attribution",
+        "signInWithShop:cartSyncNextRecognitionAt"
+      ],
+      "attribution": {
+        "clickId": null,
+        "utm": {
+          "utm_medium": "audit",
+          "utm_source": "auditor",
+          "utm_campaign": "run-52053609"
+        },
+        "foundIn": {
+          "cookies": [],
+          "localStorage": [],
+          "url": false
+        },
+        "source": "none"
+      },
+      "scripts": [
+        "https://connect.facebook.net/signals/config/1541349738037398?v=2.9.403&r=stable&domain=auditor-demo.myshopify.com&hme=ecef7557496abce7ebfd30d9fec7f02b78383ffbf3f454783aea671f0dea1dfc&ex_m=117%2C234%2C168%2C27%2C81%2C82%2C160%2C77%2C76%2C11%2C178%2C101%2C20%2C152%2C140%2C46%2C84%2C89%2C148%2C173%2C180%2C8%2C4%2C5%2C7%2C6%2C3%2C102%2C114%2C32%2C17%2C31%2C18%2C33%2C34%2C35%2C37%2C55%2C161%2C86%2C125%2C22%2C24%2C51%2C47%2C49%2C48%2C94%2C103%2C107%2C123%2C159%2C162%2C53%2C124%2C29%2C26%2C132%2C78%2C43%2C164%2C163%2C165%2C156%2C154%2C30%2C42%2C66%2C122%2C175%2C79%2C21%2C127%2C92%2C75%2C23%2C96%2C97%2C129%2C95%2C150%2C149%2C153%2C108%2C174%2C177%2C41%2C56%2C126%2C54%2C182%2C109%2C181%2C201%2C248%2C83%2C262%2C261%2C260%2C14%2C25%2C28%2C40%2C62%2C116%2C68%2C10%2C72%2C110%2C111%2C112%2C118%2C143%2C38%2C36%2C145%2C146%2C147%2C142%2C141%2C169%2C85%2C172%2C170%2C171%2C57%2C67%2C136%2C19%2C176%2C52%2C311%2C312%2C313%2C310%2C326%2C351%2C241%2C230%2C69%2C231%2C229%2C354%2C345",
+        "https://connect.facebook.net/en_US/fbevents.js"
+      ],
+      "consent": {
+        "bannerVisible": false,
+        "matched": null
+      }
+    },
+    {
+      "step": "product",
+      "t": 26343,
+      "url": "https://auditor-demo.myshopify.com/products/gift-card",
+      "title": "Gift Card – auditor-demo",
+      "cookies": [
+        {
+          "name": "_shopify_y",
+          "value": null
+        },
+        {
+          "name": "_shopify_s",
+          "value": null
+        },
+        {
+          "name": "localization",
+          "value": null
+        },
+        {
+          "name": "cart_currency",
+          "value": null
+        },
+        {
+          "name": "_shopify_analytics",
+          "value": null
+        },
+        {
+          "name": "_shopify_marketing",
+          "value": null
+        },
+        {
+          "name": "_fbp",
+          "value": null
+        },
+        {
+          "name": "_aff",
+          "value": "%7B%22utm_source%22%3A%22auditor%22%2C%22utm_medium%22%3A%22audit%22%2C%22utm_campaign%22%3A%22run-52053609%22%2C%22__break%22%3A%22drop_click_id%22%2C%22landed_at%22%3A%222026-09-20T02%3A49%3A16.187Z%22%7D"
+        },
+        {
+          "name": "_shopify_essential",
+          "value": null
+        }
+      ],
+      "localStorageKeys": [
+        "shopify:webmcp_adapter_loaded",
+        "lastExternalReferrer",
+        "lastExternalReferrerTime",
+        "aff_attribution",
+        "viewedProducts",
+        "signInWithShop:cartSyncNextRecognitionAt"
+      ],
+      "attribution": {
+        "clickId": null,
+        "utm": {
+          "utm_medium": "audit",
+          "utm_source": "auditor",
+          "utm_campaign": "run-52053609"
+        },
+        "foundIn": {
+          "cookies": [],
+          "localStorage": [],
+          "url": false
+        },
+        "source": "none"
+      },
+      "scripts": [
+        "https://connect.facebook.net/signals/config/1541349738037398?v=2.9.403&r=stable&domain=auditor-demo.myshopify.com&hme=ecef7557496abce7ebfd30d9fec7f02b78383ffbf3f454783aea671f0dea1dfc&ex_m=117%2C234%2C168%2C27%2C81%2C82%2C160%2C77%2C76%2C11%2C178%2C101%2C20%2C152%2C140%2C46%2C84%2C89%2C148%2C173%2C180%2C8%2C4%2C5%2C7%2C6%2C3%2C102%2C114%2C32%2C17%2C31%2C18%2C33%2C34%2C35%2C37%2C55%2C161%2C86%2C125%2C22%2C24%2C51%2C47%2C49%2C48%2C94%2C103%2C107%2C123%2C159%2C162%2C53%2C124%2C29%2C26%2C132%2C78%2C43%2C164%2C163%2C165%2C156%2C154%2C30%2C42%2C66%2C122%2C175%2C79%2C21%2C127%2C92%2C75%2C23%2C96%2C97%2C129%2C95%2C150%2C149%2C153%2C108%2C174%2C177%2C41%2C56%2C126%2C54%2C182%2C109%2C181%2C201%2C248%2C83%2C262%2C261%2C260%2C14%2C25%2C28%2C40%2C62%2C116%2C68%2C10%2C72%2C110%2C111%2C112%2C118%2C143%2C38%2C36%2C145%2C146%2C147%2C142%2C141%2C169%2C85%2C172%2C170%2C171%2C57%2C67%2C136%2C19%2C176%2C52%2C311%2C312%2C313%2C310%2C326%2C351%2C241%2C230%2C69%2C231%2C229%2C354%2C345",
+        "https://connect.facebook.net/en_US/fbevents.js"
+      ],
+      "consent": {
+        "bannerVisible": false,
+        "matched": null
+      }
+    },
+    {
+      "step": "cart",
+      "t": 35501,
+      "url": "https://auditor-demo.myshopify.com/cart",
+      "title": "Your Shopping Cart – auditor-demo",
+      "cookies": [
+        {
+          "name": "_shopify_y",
+          "value": null
+        },
+        {
+          "name": "_shopify_s",
+          "value": null
+        },
+        {
+          "name": "localization",
+          "value": null
+        },
+        {
+          "name": "cart_currency",
+          "value": null
+        },
+        {
+          "name": "_shopify_analytics",
+          "value": null
+        },
+        {
+          "name": "_shopify_marketing",
+          "value": null
+        },
+        {
+          "name": "_fbp",
+          "value": null
+        },
+        {
+          "name": "_aff",
+          "value": "%7B%22utm_source%22%3A%22auditor%22%2C%22utm_medium%22%3A%22audit%22%2C%22utm_campaign%22%3A%22run-52053609%22%2C%22__break%22%3A%22drop_click_id%22%2C%22landed_at%22%3A%222026-09-20T02%3A49%3A16.187Z%22%7D"
+        },
+        {
+          "name": "cart",
+          "value": null
+        },
+        {
+          "name": "_shopify_essential",
+          "value": null
+        }
+      ],
+      "localStorageKeys": [
+        "shopify:webmcp_adapter_loaded",
+        "lastExternalReferrer",
+        "lastExternalReferrerTime",
+        "aff_attribution",
+        "viewedProducts",
+        "signInWithShop:cartSyncNextRecognitionAt"
+      ],
+      "attribution": {
+        "clickId": null,
+        "utm": {
+          "utm_medium": "audit",
+          "utm_source": "auditor",
+          "utm_campaign": "run-52053609"
+        },
+        "foundIn": {
+          "cookies": [],
+          "localStorage": [],
+          "url": false
+        },
+        "source": "none"
+      },
+      "scripts": [
+        "https://connect.facebook.net/signals/config/1541349738037398?v=2.9.403&r=stable&domain=auditor-demo.myshopify.com&hme=ecef7557496abce7ebfd30d9fec7f02b78383ffbf3f454783aea671f0dea1dfc&ex_m=117%2C234%2C168%2C27%2C81%2C82%2C160%2C77%2C76%2C11%2C178%2C101%2C20%2C152%2C140%2C46%2C84%2C89%2C148%2C173%2C180%2C8%2C4%2C5%2C7%2C6%2C3%2C102%2C114%2C32%2C17%2C31%2C18%2C33%2C34%2C35%2C37%2C55%2C161%2C86%2C125%2C22%2C24%2C51%2C47%2C49%2C48%2C94%2C103%2C107%2C123%2C159%2C162%2C53%2C124%2C29%2C26%2C132%2C78%2C43%2C164%2C163%2C165%2C156%2C154%2C30%2C42%2C66%2C122%2C175%2C79%2C21%2C127%2C92%2C75%2C23%2C96%2C97%2C129%2C95%2C150%2C149%2C153%2C108%2C174%2C177%2C41%2C56%2C126%2C54%2C182%2C109%2C181%2C201%2C248%2C83%2C262%2C261%2C260%2C14%2C25%2C28%2C40%2C62%2C116%2C68%2C10%2C72%2C110%2C111%2C112%2C118%2C143%2C38%2C36%2C145%2C146%2C147%2C142%2C141%2C169%2C85%2C172%2C170%2C171%2C57%2C67%2C136%2C19%2C176%2C52%2C311%2C312%2C313%2C310%2C326%2C351%2C241%2C230%2C69%2C231%2C229%2C354%2C345",
+        "https://connect.facebook.net/en_US/fbevents.js"
+      ],
+      "consent": {
+        "bannerVisible": false,
+        "matched": null
+      }
+    },
+    {
+      "step": "checkout",
+      "t": 43576,
+      "url": "https://auditor-demo.myshopify.com/checkouts/cn/hWNH2C2d9dIqfpnaHRxgBp8V/en-us?_r=AQABLW1TXJ4vaotunSGXWXTpnmUt1x7s73zgeVmqp9l9YDk",
+      "title": "Checkout - auditor-demo",
+      "cookies": [
+        {
+          "name": "_shopify_y",
+          "value": null
+        },
+        {
+          "name": "_shopify_s",
+          "value": null
+        },
+        {
+          "name": "localization",
+          "value": null
+        },
+        {
+          "name": "cart_currency",
+          "value": null
+        },
+        {
+          "name": "_fbp",
+          "value": null
+        },
+        {
+          "name": "_aff",
+          "value": "%7B%22utm_source%22%3A%22auditor%22%2C%22utm_medium%22%3A%22audit%22%2C%22utm_campaign%22%3A%22run-52053609%22%2C%22__break%22%3A%22drop_click_id%22%2C%22landed_at%22%3A%222026-09-20T02%3A49%3A16.187Z%22%7D"
+        },
+        {
+          "name": "cart",
+          "value": null
+        },
+        {
+          "name": "_shopify_marketing",
+          "value": null
+        },
+        {
+          "name": "_shopify_essential",
+          "value": null
+        },
+        {
+          "name": "_shopify_analytics",
+          "value": null
+        }
+      ],
+      "localStorageKeys": [
+        "lastExternalReferrerTime",
+        "trackedCompleteOrderSourceId",
+        "__ui",
+        "aff_attribution",
+        "lastSeenErrorReceiptId",
+        "lastExternalReferrer",
+        "shopify:webmcp_adapter_loaded",
+        "trackedSourceId",
+        "cartToken",
+        "viewedProducts",
+        "signInWithShop:cartSyncNextRecognitionAt"
+      ],
+      "attribution": {
+        "clickId": null,
+        "utm": {
+          "utm_medium": "audit",
+          "utm_source": "auditor",
+          "utm_campaign": "run-52053609"
+        },
+        "foundIn": {
+          "cookies": [],
+          "localStorage": [],
+          "url": false
+        },
+        "source": "none"
+      },
+      "scripts": [],
+      "consent": {
+        "bannerVisible": false,
+        "matched": null
+      }
+    },
+    {
+      "step": "payment",
+      "t": 45281,
+      "url": "https://auditor-demo.myshopify.com/checkouts/cn/hWNH2C2d9dIqfpnaHRxgBp8V/en-us?_r=AQABLW1TXJ4vaotunSGXWXTpnmUt1x7s73zgeVmqp9l9YDk",
+      "title": "Checkout - auditor-demo",
+      "cookies": [
+        {
+          "name": "_shopify_y",
+          "value": null
+        },
+        {
+          "name": "_shopify_s",
+          "value": null
+        },
+        {
+          "name": "localization",
+          "value": null
+        },
+        {
+          "name": "cart_currency",
+          "value": null
+        },
+        {
+          "name": "_fbp",
+          "value": null
+        },
+        {
+          "name": "_aff",
+          "value": "%7B%22utm_source%22%3A%22auditor%22%2C%22utm_medium%22%3A%22audit%22%2C%22utm_campaign%22%3A%22run-52053609%22%2C%22__break%22%3A%22drop_click_id%22%2C%22landed_at%22%3A%222026-09-20T02%3A49%3A16.187Z%22%7D"
+        },
+        {
+          "name": "cart",
+          "value": null
+        },
+        {
+          "name": "_shopify_marketing",
+          "value": null
+        },
+        {
+          "name": "_shopify_analytics",
+          "value": null
+        },
+        {
+          "name": "_shopify_essential",
+          "value": null
+        }
+      ],
+      "localStorageKeys": [
+        "lastExternalReferrerTime",
+        "trackedCompleteOrderSourceId",
+        "__ui",
+        "aff_attribution",
+        "lastSeenErrorReceiptId",
+        "lastExternalReferrer",
+        "shopify:webmcp_adapter_loaded",
+        "trackedSourceId",
+        "cartToken",
+        "viewedProducts",
+        "signInWithShop:cartSyncNextRecognitionAt"
+      ],
+      "attribution": {
+        "clickId": null,
+        "utm": {
+          "utm_medium": "audit",
+          "utm_source": "auditor",
+          "utm_campaign": "run-52053609"
+        },
+        "foundIn": {
+          "cookies": [],
+          "localStorage": [],
+          "url": false
+        },
+        "source": "none"
+      },
+      "scripts": [],
+      "consent": {
+        "bannerVisible": false,
+        "matched": null
+      }
+    },
+    {
+      "step": "thank_you",
+      "t": 53608,
+      "url": "https://auditor-demo.myshopify.com/checkouts/cn/hWNH2C2d9dIqfpnaHRxgBp8V/en-us/thank-you?_r=AQABLW1TXJ4vaotunSGXWXTpnmUt1x7s73zgeVmqp9l9YDk",
+      "title": "Thank you for your purchase! - auditor-demo - Checkout",
+      "cookies": [
+        {
+          "name": "_shopify_y",
+          "value": null
+        },
+        {
+          "name": "_shopify_s",
+          "value": null
+        },
+        {
+          "name": "localization",
+          "value": null
+        },
+        {
+          "name": "cart_currency",
+          "value": null
+        },
+        {
+          "name": "_fbp",
+          "value": null
+        },
+        {
+          "name": "_aff",
+          "value": "%7B%22utm_source%22%3A%22auditor%22%2C%22utm_medium%22%3A%22audit%22%2C%22utm_campaign%22%3A%22run-52053609%22%2C%22__break%22%3A%22drop_click_id%22%2C%22landed_at%22%3A%222026-09-20T02%3A49%3A16.187Z%22%7D"
+        },
+        {
+          "name": "_shopify_marketing",
+          "value": null
+        },
+        {
+          "name": "_shopify_analytics",
+          "value": null
+        },
+        {
+          "name": "_shopify_essential",
+          "value": null
+        }
+      ],
+      "localStorageKeys": [
+        "lastExternalReferrerTime",
+        "trackedCompleteOrderSourceId",
+        "__ui",
+        "aff_attribution",
+        "wpmLoggedConversion1",
+        "lastSeenErrorReceiptId",
+        "lastExternalReferrer",
+        "shopify:webmcp_adapter_loaded",
+        "trackedSourceId",
+        "cartToken",
+        "viewedProducts",
+        "signInWithShop:cartSyncNextRecognitionAt"
+      ],
+      "attribution": {
+        "clickId": null,
+        "utm": {
+          "utm_medium": "audit",
+          "utm_source": "auditor",
+          "utm_campaign": "run-52053609"
+        },
+        "foundIn": {
+          "cookies": [],
+          "localStorage": [],
+          "url": false
+        },
+        "source": "none"
+      },
+      "scripts": [],
+      "consent": {
+        "bannerVisible": false,
+        "matched": null
+      }
+    }
+  ],
+  "requests": [
+    {
+      "seq": 0,
+      "t": 117,
+      "method": "GET",
+      "url": "http://localhost:3001/advertorial",
+      "host": "localhost",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "landing",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 351,
+      "params": {
+        "__break": {
+          "kind": "value",
+          "value": "drop_click_id"
+        },
+        "click_id": {
+          "kind": "value",
+          "value": "aud-52053609"
+        },
+        "utm_medium": {
+          "kind": "value",
+          "value": "audit"
+        },
+        "utm_source": {
+          "kind": "value",
+          "value": "auditor"
+        },
+        "utm_campaign": {
+          "kind": "value",
+          "value": "run-52053609"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 22,
+      "t": 2276,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "landing",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 441,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 23,
+      "t": 2867,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "landing",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 84,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "localhost"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 24,
+      "t": 3059,
+      "method": "GET",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "image",
+      "navigation": false,
+      "step": "landing",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 222,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "http://localhost:3001/advertorial?__break=drop_click_id&click_id=aud-52053609&utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "PageView"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "false"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "eid": {
+          "kind": "value",
+          "value": "fdfbc7c9-7dac-4f57-97bf-3f5fcb97b7c0"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.0.1789872550291.832171772451559275"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "plt": {
+          "kind": "value",
+          "value": "1623.2999999821186"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 25,
+      "t": 3902,
+      "method": "GET",
+      "url": "http://localhost:3001/go",
+      "host": "localhost",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "cta",
+      "status": 302,
+      "contentType": null,
+      "durationMs": 26,
+      "params": {
+        "path": {
+          "kind": "value",
+          "value": "/collections/all"
+        },
+        "__break": {
+          "kind": "value",
+          "value": "drop_click_id"
+        },
+        "click_id": {
+          "kind": "value",
+          "value": "aud-52053609"
+        },
+        "utm_medium": {
+          "kind": "value",
+          "value": "audit"
+        },
+        "utm_source": {
+          "kind": "value",
+          "value": "auditor"
+        },
+        "utm_campaign": {
+          "kind": "value",
+          "value": "run-52053609"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": "https://auditor-demo.myshopify.com/collections/all?utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id",
+      "failure": null
+    },
+    {
+      "seq": 26,
+      "t": 3929,
+      "method": "GET",
+      "url": "https://auditor-demo.myshopify.com/collections/all",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "cta",
+      "status": 302,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 245,
+      "params": {
+        "__break": {
+          "kind": "value",
+          "value": "drop_click_id"
+        },
+        "utm_medium": {
+          "kind": "value",
+          "value": "audit"
+        },
+        "utm_source": {
+          "kind": "value",
+          "value": "auditor"
+        },
+        "utm_campaign": {
+          "kind": "value",
+          "value": "run-52053609"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": "https://auditor-demo.myshopify.com/password",
+      "failure": null
+    },
+    {
+      "seq": 27,
+      "t": 4175,
+      "method": "GET",
+      "url": "https://auditor-demo.myshopify.com/password",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "cta",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 383,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 32,
+      "t": 5533,
+      "method": "POST",
+      "url": "https://auditor-demo.myshopify.com/password",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "store",
+      "status": 302,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 324,
+      "params": {
+        "password": {
+          "kind": "secret",
+          "present": true
+        },
+        "authenticity_token": {
+          "kind": "secret",
+          "present": true
+        }
+      },
+      "bodyKind": "form",
+      "bodyBytes": 126,
+      "redirectTo": "https://auditor-demo.myshopify.com/",
+      "failure": null
+    },
+    {
+      "seq": 33,
+      "t": 5857,
+      "method": "GET",
+      "url": "https://auditor-demo.myshopify.com/",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "store",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 482,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 127,
+      "t": 6694,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 545,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 158,
+      "t": 7646,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 297,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "auditor-demo.myshopify.com"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 161,
+      "t": 7702,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 127,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 188,
+      "t": 7939,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 151,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "auditor-demo.myshopify.com"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 190,
+      "t": 8086,
+      "method": "GET",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "image",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 82,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "https://auditor-demo.myshopify.com/"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "PageView"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "false"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "eid": {
+          "kind": "value",
+          "value": "ca29e4e6-5953-4d8c-9ef8-bca7239e9b32"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.2.1789872555318.142013937935794617"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "plt": {
+          "kind": "value",
+          "value": "1703.5"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        },
+        "sssd[s_country]": {
+          "kind": "value",
+          "value": "en_US"
+        },
+        "sssd[is_s_domain]": {
+          "kind": "value",
+          "value": "true"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 198,
+      "t": 8186,
+      "method": "GET",
+      "url": "https://auditor-demo.myshopify.com/collections/all",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "store",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 761,
+      "params": {
+        "__break": {
+          "kind": "value",
+          "value": "drop_click_id"
+        },
+        "utm_medium": {
+          "kind": "value",
+          "value": "audit"
+        },
+        "utm_source": {
+          "kind": "value",
+          "value": "auditor"
+        },
+        "utm_campaign": {
+          "kind": "value",
+          "value": "run-52053609"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 314,
+      "t": 9102,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 656,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 324,
+      "t": 9830,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 380,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "auditor-demo.myshopify.com"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 330,
+      "t": 10240,
+      "method": "GET",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "image",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 211,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "https://auditor-demo.myshopify.com/collections/all?utm_source=auditor&utm_medium=audit&utm_campaign=run-52053609&__break=drop_click_id"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "PageView"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "false"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "eid": {
+          "kind": "value",
+          "value": "47ad4179-2997-4a24-a0a2-a04b51647715"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.2.1789872555318.142013937935794617"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        },
+        "sssd[s_country]": {
+          "kind": "value",
+          "value": "en_US"
+        },
+        "sssd[is_s_domain]": {
+          "kind": "value",
+          "value": "true"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 354,
+      "t": 10763,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 393,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 387,
+      "t": 11250,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "store",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 247,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "auditor-demo.myshopify.com"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 579,
+      "t": 17993,
+      "method": "GET",
+      "url": "https://auditor-demo.myshopify.com/products/gift-card",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "product",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 343,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 670,
+      "t": 18483,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "product",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 522,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 676,
+      "t": 19097,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "product",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 1687,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "auditor-demo.myshopify.com"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 677,
+      "t": 20900,
+      "method": "POST",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "ping",
+      "navigation": false,
+      "step": "product",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 160,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "https://auditor-demo.myshopify.com/products/gift-card"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "PageView"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "false"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "eid": {
+          "kind": "value",
+          "value": "2fd9948f-1941-4317-8a7b-94a73ba1d54b"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.2.1789872555318.142013937935794617"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        },
+        "ap[contents]": {
+          "kind": "value",
+          "value": "[{\"item_price\":10},{\"item_price\":10,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654045909148#offer\"},{\"item_price\":25,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654045941916#offer\"},{\"item_price\":50,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654045974684#offer\"},{\"item_price\":100,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654046007452#offer\"}]"
+        },
+        "ap[currency]": {
+          "kind": "value",
+          "value": "USD"
+        },
+        "mft[version]": {
+          "kind": "value",
+          "value": "0c8ec04fbe50f0b34e0f564ff8a31b0e"
+        },
+        "mft[microdata]": {
+          "kind": "value",
+          "value": "[{\"source\":\"json_ld\",\"data\":{\"objects\":{\"product_group\":[{\"fields\":{\"id\":[\"/products/gift-card#product\"],\"name\":[\"Gift Card\"],\"description\":[\"This is a gift card for the store\"],\"url\":[\"https://auditor-demo.myshopify.com/products/gift-card\"],\"productId\":[\"9278762451100\"],\"category\":[\"Gift Cards\"]},\"objects\":{\"brandStruct\":[{\"fields\":{\"name\":[\"Snowboard Vendor\"]},\"hash\":\"4a44c7df664a6061\"}]},\"hash\":\"a95342238894e046\"}],\"product\":[{\"fields\":{\"id\":[\"/products/gift-card?variant=47654045909148#varian",
+          "truncated": true
+        },
+        "sssd[s_country]": {
+          "kind": "value",
+          "value": "en_US"
+        },
+        "sssd[is_s_domain]": {
+          "kind": "value",
+          "value": "true"
+        }
+      },
+      "bodyKind": "multipart",
+      "bodyBytes": 11869,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 678,
+      "t": 20904,
+      "method": "POST",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "ping",
+      "navigation": false,
+      "step": "product",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 163,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "https://auditor-demo.myshopify.com/products/gift-card"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "ViewContent"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "false"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "eid": {
+          "kind": "value",
+          "value": "47b01c1e-6b43-4381-b496-f2a01e6242e4"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.2.1789872555318.142013937935794617"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        },
+        "cd[value]": {
+          "kind": "value",
+          "value": "10"
+        },
+        "ap[contents]": {
+          "kind": "value",
+          "value": "[{\"item_price\":10},{\"item_price\":10,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654045909148#offer\"},{\"item_price\":25,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654045941916#offer\"},{\"item_price\":50,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654045974684#offer\"},{\"item_price\":100,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654046007452#offer\"}]"
+        },
+        "ap[currency]": {
+          "kind": "value",
+          "value": "USD"
+        },
+        "cd[currency]": {
+          "kind": "value",
+          "value": "USD"
+        },
+        "mft[version]": {
+          "kind": "value",
+          "value": "0c8ec04fbe50f0b34e0f564ff8a31b0e"
+        },
+        "mft[microdata]": {
+          "kind": "value",
+          "value": "[{\"source\":\"json_ld\",\"data\":{\"objects\":{\"product_group\":[{\"fields\":{\"id\":[\"/products/gift-card#product\"],\"name\":[\"Gift Card\"],\"description\":[\"This is a gift card for the store\"],\"url\":[\"https://auditor-demo.myshopify.com/products/gift-card\"],\"productId\":[\"9278762451100\"],\"category\":[\"Gift Cards\"]},\"objects\":{\"brandStruct\":[{\"fields\":{\"name\":[\"Snowboard Vendor\"]},\"hash\":\"4a44c7df664a6061\"}]},\"hash\":\"a95342238894e046\"}],\"product\":[{\"fields\":{\"id\":[\"/products/gift-card?variant=47654045909148#varian",
+          "truncated": true
+        },
+        "cd[content_ids]": {
+          "kind": "value",
+          "value": "[\"47654045909148\"]"
+        },
+        "sssd[s_country]": {
+          "kind": "value",
+          "value": "en_US"
+        },
+        "cd[content_name]": {
+          "kind": "value",
+          "value": "Gift Card"
+        },
+        "cd[content_type]": {
+          "kind": "value",
+          "value": "product"
+        },
+        "sssd[is_s_domain]": {
+          "kind": "value",
+          "value": "true"
+        }
+      },
+      "bodyKind": "multipart",
+      "bodyBytes": 12384,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 695,
+      "t": 21166,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "product",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 1112,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 712,
+      "t": 22416,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "product",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 793,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "auditor-demo.myshopify.com"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 854,
+      "t": 26452,
+      "method": "POST",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "ping",
+      "navigation": false,
+      "step": "cart",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 91,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "https://auditor-demo.myshopify.com/products/gift-card"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "SubscribedButtonClick"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "false"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.2.1789872555318.142013937935794617"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "plt": {
+          "kind": "value",
+          "value": "4209.699999988079"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        },
+        "ap[contents]": {
+          "kind": "value",
+          "value": "[{\"item_price\":10},{\"item_price\":10,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654045909148#offer\"},{\"item_price\":25,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654045941916#offer\"},{\"item_price\":50,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654045974684#offer\"},{\"item_price\":100,\"availability\":\"InStock\",\"id\":\"/products/gift-card?variant=47654046007452#offer\"}]"
+        },
+        "ap[currency]": {
+          "kind": "value",
+          "value": "USD"
+        },
+        "mft[version]": {
+          "kind": "value",
+          "value": "0c8ec04fbe50f0b34e0f564ff8a31b0e"
+        },
+        "cd[buttonText]": {
+          "kind": "value",
+          "value": "Add to cart"
+        },
+        "mft[microdata]": {
+          "kind": "value",
+          "value": "[{\"source\":\"json_ld\",\"data\":{\"objects\":{\"product_group\":[{\"fields\":{\"id\":[\"/products/gift-card#product\"],\"name\":[\"Gift Card\"],\"description\":[\"This is a gift card for the store\"],\"url\":[\"https://auditor-demo.myshopify.com/products/gift-card\"],\"productId\":[\"9278762451100\"],\"category\":[\"Gift Cards\"]},\"objects\":{\"brandStruct\":[{\"fields\":{\"name\":[\"Snowboard Vendor\"]},\"hash\":\"4a44c7df664a6061\"}]},\"hash\":\"a95342238894e046\"}],\"product\":[{\"fields\":{\"id\":[\"/products/gift-card?variant=47654045909148#varian",
+          "truncated": true
+        },
+        "sssd[s_country]": {
+          "kind": "value",
+          "value": "en_US"
+        },
+        "cd[formFeatures]": {
+          "kind": "value",
+          "value": "[{\"id\":\"\",\"name\":\"form_type\",\"tag\":\"input\",\"inputType\":\"hidden\"},{\"id\":\"\",\"name\":\"utf8\",\"tag\":\"input\",\"inputType\":\"hidden\"},{\"id\":\"\",\"name\":\"id\",\"tag\":\"input\",\"inputType\":\"hidden\"},{\"id\":\"My-email-button-AdE5JeXpUTkVGM0twU__buy_buttons_eYQEYi\",\"name\":\"gift-card-delivery-AdE5JeXpUTkVGM0twU__buy_buttons_eYQEYi\",\"tag\":\"input\",\"inputType\":\"radio\"},{\"id\":\"Recipient-email-button-AdE5JeXpUTkVGM0twU__buy_buttons_eYQEYi\",\"name\":\"gift-card-delivery-AdE5JeXpUTkVGM0twU__buy_buttons_eYQEYi\",\"tag\":\"input\",\"in",
+          "truncated": true
+        },
+        "cd[pageFeatures]": {
+          "kind": "value",
+          "value": "{\"title\":\"\\n  Gift Card\\n – auditor-demo\"}"
+        },
+        "sssd[is_s_domain]": {
+          "kind": "value",
+          "value": "true"
+        },
+        "cd[buttonFeatures]": {
+          "kind": "value",
+          "value": "{\"classList\":\"button add-to-cart-button button button--AZVdUY3dGNWpLSWoze__add-to-cart\",\"destination\":\"https://auditor-demo.myshopify.com/cart/add\",\"id\":\"BuyButtons-ProductSubmitButton-AZVdUY3dGNWpLSWoze__add-to-cart\",\"imageUrl\":\"\",\"innerText\":\"Add to cart\",\"numChildButtons\":0,\"tag\":\"button\",\"type\":\"submit\",\"name\":\"add\",\"value\":\"\"}"
+        },
+        "sssd[s_selected_variant]": {
+          "kind": "value",
+          "value": "47654045909148"
+        }
+      },
+      "bodyKind": "multipart",
+      "bodyBytes": 14558,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 855,
+      "t": 26454,
+      "method": "POST",
+      "url": "https://auditor-demo.myshopify.com/cart/add.js",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "fetch",
+      "navigation": false,
+      "step": "cart",
+      "status": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "durationMs": 767,
+      "params": {
+        "id": {
+          "kind": "value",
+          "value": "47654045909148"
+        },
+        "utf8": {
+          "kind": "value",
+          "value": "[masked]"
+        },
+        "quantity": {
+          "kind": "value",
+          "value": "1"
+        },
+        "sections": {
+          "kind": "value",
+          "value": "cart-drawer-section"
+        },
+        "form_type": {
+          "kind": "value",
+          "value": "product"
+        },
+        "product-id": {
+          "kind": "value",
+          "value": "9278762451100"
+        },
+        "section-id": {
+          "kind": "value",
+          "value": "template--21892197122204__main"
+        },
+        "gift-card-delivery-AdE5JeXpUTkVGM0twU__buy_buttons_eYQEYi": {
+          "kind": "value",
+          "value": "self"
+        }
+      },
+      "bodyKind": "multipart",
+      "bodyBytes": 939,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 871,
+      "t": 27218,
+      "method": "POST",
+      "url": "https://auditor-demo.myshopify.com/cart/update.js",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "fetch",
+      "navigation": false,
+      "step": "cart",
+      "status": null,
+      "contentType": null,
+      "durationMs": null,
+      "params": {
+        "attributes.__break": {
+          "kind": "value",
+          "value": "drop_click_id"
+        },
+        "attributes.utm_medium": {
+          "kind": "value",
+          "value": "audit"
+        },
+        "attributes.utm_source": {
+          "kind": "value",
+          "value": "auditor"
+        },
+        "attributes.utm_campaign": {
+          "kind": "value",
+          "value": "run-52053609"
+        }
+      },
+      "bodyKind": "json",
+      "bodyBytes": 116,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 873,
+      "t": 27227,
+      "method": "GET",
+      "url": "https://auditor-demo.myshopify.com/cart",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "cart",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 473,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 920,
+      "t": 27775,
+      "method": "POST",
+      "url": "https://auditor-demo.myshopify.com/cart/update.js",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "fetch",
+      "navigation": false,
+      "step": "cart",
+      "status": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "durationMs": null,
+      "params": {
+        "attributes.__break": {
+          "kind": "value",
+          "value": "drop_click_id"
+        },
+        "attributes.utm_medium": {
+          "kind": "value",
+          "value": "audit"
+        },
+        "attributes.utm_source": {
+          "kind": "value",
+          "value": "auditor"
+        },
+        "attributes.utm_campaign": {
+          "kind": "value",
+          "value": "run-52053609"
+        }
+      },
+      "bodyKind": "json",
+      "bodyBytes": 116,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 976,
+      "t": 27838,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "cart",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 1246,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1010,
+      "t": 28535,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "cart",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 1633,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1017,
+      "t": 29158,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "cart",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 1488,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "auditor-demo.myshopify.com"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1048,
+      "t": 30253,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "cart",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 683,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "auditor-demo.myshopify.com"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1053,
+      "t": 30675,
+      "method": "GET",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "image",
+      "navigation": false,
+      "step": "cart",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 49,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "https://auditor-demo.myshopify.com/cart"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "PageView"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "false"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "eid": {
+          "kind": "value",
+          "value": "b7480c0d-3b0a-4221-a8f0-251dd893307a"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.2.1789872555318.142013937935794617"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "plt": {
+          "kind": "value",
+          "value": "1007.9000000059605"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        },
+        "sssd[s_country]": {
+          "kind": "value",
+          "value": "en_US"
+        },
+        "sssd[is_s_domain]": {
+          "kind": "value",
+          "value": "true"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1202,
+      "t": 35613,
+      "method": "POST",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "ping",
+      "navigation": false,
+      "step": "checkout",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 94,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "https://auditor-demo.myshopify.com/cart"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "SubscribedButtonClick"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "false"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.2.1789872555318.142013937935794617"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "plt": {
+          "kind": "value",
+          "value": "1007.9000000059605"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        },
+        "cd[buttonText]": {
+          "kind": "value",
+          "value": "Check out"
+        },
+        "sssd[s_country]": {
+          "kind": "value",
+          "value": "en_US"
+        },
+        "cd[formFeatures]": {
+          "kind": "value",
+          "value": "[masked]"
+        },
+        "cd[pageFeatures]": {
+          "kind": "value",
+          "value": "{\"title\":\"\\n  Your Shopping Cart\\n – auditor-demo\"}"
+        },
+        "sssd[is_s_domain]": {
+          "kind": "value",
+          "value": "true"
+        },
+        "cd[buttonFeatures]": {
+          "kind": "value",
+          "value": "{\"classList\":\"button-text\",\"destination\":\"\",\"id\":\"\",\"imageUrl\":\"\",\"innerText\":\"Check out\",\"numChildButtons\":0,\"tag\":\"span\",\"type\":null}"
+        },
+        "sssd[s_selected_variant]": {
+          "kind": "value",
+          "value": "47654046105756"
+        }
+      },
+      "bodyKind": "multipart",
+      "bodyBytes": 8192,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1203,
+      "t": 35619,
+      "method": "POST",
+      "url": "https://auditor-demo.myshopify.com/cart",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "checkout",
+      "status": 302,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 328,
+      "params": {
+        "checkout": {
+          "kind": "value",
+          "value": ""
+        },
+        "updates[]": {
+          "kind": "value",
+          "value": "1"
+        }
+      },
+      "bodyKind": "form",
+      "bodyBytes": 25,
+      "redirectTo": "https://auditor-demo.myshopify.com/checkouts/cn/hWNH2C2d9dIqfpnaHRxgBp8V/en-us?_r=AQABLW1TXJ4vaotunSGXWXTpnmUt1x7s73zgeVmqp9l9YDk",
+      "failure": null
+    },
+    {
+      "seq": 1205,
+      "t": 35947,
+      "method": "GET",
+      "url": "https://auditor-demo.myshopify.com/checkouts/cn/hWNH2C2d9dIqfpnaHRxgBp8V/en-us",
+      "host": "auditor-demo.myshopify.com",
+      "resourceType": "document",
+      "navigation": true,
+      "step": "checkout",
+      "status": 200,
+      "contentType": "text/html; encoding=utf-8",
+      "durationMs": 823,
+      "params": {
+        "_r": {
+          "kind": "value",
+          "value": "AQABLW1TXJ4vaotunSGXWXTpnmUt1x7s73zgeVmqp9l9YDk"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1420,
+      "t": 40406,
+      "method": "GET",
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "checkout",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 362,
+      "params": {},
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1422,
+      "t": 40892,
+      "method": "GET",
+      "url": "https://connect.facebook.net/signals/config/1541349738037398",
+      "host": "connect.facebook.net",
+      "resourceType": "script",
+      "navigation": false,
+      "step": "checkout",
+      "status": 200,
+      "contentType": "application/x-javascript; charset=utf-8",
+      "durationMs": 257,
+      "params": {
+        "ex_m": {
+          "kind": "value",
+          "value": "117,234,168,27,81,82,160,77,76,11,178,101,20,152,140,46,84,89,148,173,180,8,4,5,7,6,3,102,114,32,17,31,18,33,34,35,37,55,161,86,125,22,24,51,47,49,48,94,103,107,123,159,162,53,124,29,26,132,78,43,164,163,165,156,154,30,42,66,122,175,79,21,127,92,75,23,96,97,129,95,150,149,153,108,174,177,41,56,126,54,182,109,181,201,248,83,262,261,260,14,25,28,40,62,116,68,10,72,110,111,112,118,143,38,36,145,146,147,142,141,169,85,172,170,171,57,67,136,19,176,52,311,312,313,310,326,351,241,230,69,231,229,354,345",
+          "truncated": true
+        },
+        "domain": {
+          "kind": "value",
+          "value": "auditor-demo.myshopify.com"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1426,
+      "t": 41194,
+      "method": "GET",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "image",
+      "navigation": false,
+      "step": "checkout",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 53,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "https://auditor-demo.myshopify.com/web-pixels@1b3c7779w6e1f7d30p7ae783d3m9b5a05aa/custom/web-pixel-192184476@4/sandbox/modern/checkouts/cn/hWNH2C2d9dIqfpnaHRxgBp8V/en-us?_r=AQABLW1TXJ4vaotunSGXWXTpnmUt1x7s73zgeVmqp9l9YDk"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "InitiateCheckout"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "true"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "eid": {
+          "kind": "value",
+          "value": "e27dd19c-a7be-449f-9b7a-57c8dffee17d"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.2.1789872555318.142013937935794617"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "plt": {
+          "kind": "value",
+          "value": "1114.699999988079"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        },
+        "cd[value]": {
+          "kind": "value",
+          "value": "10"
+        },
+        "cd[currency]": {
+          "kind": "value",
+          "value": "USD"
+        },
+        "cd[num_items]": {
+          "kind": "value",
+          "value": "1"
+        },
+        "cd[content_ids]": {
+          "kind": "value",
+          "value": "[\"47654045909148\"]"
+        },
+        "cd[content_type]": {
+          "kind": "value",
+          "value": "product"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    },
+    {
+      "seq": 1484,
+      "t": 50310,
+      "method": "GET",
+      "url": "https://www.facebook.com/tr/",
+      "host": "www.facebook.com",
+      "resourceType": "image",
+      "navigation": false,
+      "step": "thank_you",
+      "status": 200,
+      "contentType": "text/plain",
+      "durationMs": 48,
+      "params": {
+        "dl": {
+          "kind": "value",
+          "value": "https://auditor-demo.myshopify.com/web-pixels@1b3c7779w6e1f7d30p7ae783d3m9b5a05aa/custom/web-pixel-192184476@4/sandbox/modern/checkouts/cn/hWNH2C2d9dIqfpnaHRxgBp8V/en-us?_r=AQABLW1TXJ4vaotunSGXWXTpnmUt1x7s73zgeVmqp9l9YDk"
+        },
+        "ev": {
+          "kind": "value",
+          "value": "Purchase"
+        },
+        "id": {
+          "kind": "value",
+          "value": "1541349738037398"
+        },
+        "if": {
+          "kind": "value",
+          "value": "true"
+        },
+        "iw": {
+          "kind": "value",
+          "value": "false"
+        },
+        "tz": {
+          "kind": "value",
+          "value": "300"
+        },
+        "eid": {
+          "kind": "value",
+          "value": "purchase-7589020663964"
+        },
+        "fbp": {
+          "kind": "value",
+          "value": "fb.2.1789872555318.142013937935794617"
+        },
+        "iss": {
+          "kind": "value",
+          "value": "1"
+        },
+        "plt": {
+          "kind": "value",
+          "value": "1114.699999988079"
+        },
+        "imft": {
+          "kind": "value",
+          "value": "1"
+        },
+        "ud[em]": {
+          "kind": "pii",
+          "present": true,
+          "looksHashed": true,
+          "hashAlgoGuess": "sha256",
+          "normalised": true
+        },
+        "aud[em]": {
+          "kind": "pii",
+          "present": true,
+          "looksHashed": true,
+          "hashAlgoGuess": "sha256",
+          "normalised": true
+        },
+        "cud[em]": {
+          "kind": "value",
+          "value": "[masked]"
+        },
+        "ncud[em]": {
+          "kind": "value",
+          "value": "[masked]"
+        },
+        "cd[value]": {
+          "kind": "value",
+          "value": "10"
+        },
+        "cd[currency]": {
+          "kind": "value",
+          "value": "USD"
+        },
+        "cd[order_id]": {
+          "kind": "value",
+          "value": "7589020663964"
+        },
+        "cd[num_items]": {
+          "kind": "value",
+          "value": "1"
+        },
+        "cd[content_ids]": {
+          "kind": "value",
+          "value": "[\"47654045909148\"]"
+        },
+        "cd[content_type]": {
+          "kind": "value",
+          "value": "product"
+        }
+      },
+      "bodyKind": "none",
+      "bodyBytes": 0,
+      "redirectTo": null,
+      "failure": null
+    }
+  ],
+  "requestsTruncated": false,
+  "order": {
+    "id": "7589020663964",
+    "purchaseEventId": "purchase-7589020663964"
+  },
+  "outcome": {
+    "reachedStep": "thank_you",
+    "stopReason": "purchase completed"
+  }
+}

@@ -87,7 +87,8 @@ If step 5 shows no Additional details card, the attributes never reached the car
 
 Both pasted files read the `__break` value (a comma-separated toggle list) that the snippet
 captures from the URL and writes as a cart attribute. In the snippet: `strip_event_id` sends
-events without an `event_id`, `double_fire` fires PageView twice. In the pixel:
+events without an `event_id`, `double_fire` also sends PageView as the `<noscript>` fallback
+image (a second `fbq('track')` call would be dropped by `fbevents.js`; an image cannot be). In the pixel:
 `strip_event_id` as above, `unhashed_email` adds the customer email as a plaintext custom
 parameter to Purchase. After pulling M2, re-paste `snippets/aff-tracking.liquid`,
 `sections/attribution-debug.liquid` (new `__break` row) and `pixels/meta-checkout.js`.
@@ -105,5 +106,7 @@ parameter to Purchase. After pulling M2, re-paste `snippets/aff-tracking.liquid`
 - **The first product on the generated store is a sold-out gift card.** The runner skips products whose add-to-cart button is disabled.
 - **Checkout validation is strict**: a fictional `555-01xx` phone number and a made-up street both block payment (the address earns a "did you mean" prompt). The runner types a real, deliverable address and no phone. A "Pay now" click that lands before shipping rates have settled is silently ignored; the runner retries and reports the page's own error text if it still fails.
 - **The Purchase pixel hit lags the thank-you page.** The checkout pixel sandbox and `fbevents.js` can take longer than a network-idle wait; the runner waits for the `Purchase` request itself (bounded) before taking the last snapshot.
+- **Cart attributes do not reach the checkout pixel.** `checkout.customAttributes` arrived empty at `checkout_started` and `checkout_completed` in every runner-driven purchase, while the same cart's attributes did reach the order's _Additional details_. The pixel now reads the `_aff` cookie through `browser.cookie.get` (checkout runs on the store's domain) and falls back to `customAttributes`.
+- **`fbevents.js` deduplicates a repeated PageView within one page load.** Two `fbq('track', 'PageView')` calls on one page produce one request (verified with `fbevents.js` blocked: two calls queued, one hit on the wire). The `double_fire` toggle therefore reproduces the real-world double count instead: the `<noscript>` fallback image rendered for everyone.
 - **Shopify's own telemetry echoes typed checkout fields** (`monorail` `field_value`, the address-autocomplete `query`, `zone`) under keys no name-based rule would flag. The redactor treats any value containing something the runner typed as PII.
 - **Chromium coalesces identical in-flight script URLs.** Two byte-identical `<script src>` tags for one GTM container produce one network request; the `duplicate_gtm` toggle varies the second URL (`&l=dataLayer`, as a theme+app pair would) so both are observable on the wire.

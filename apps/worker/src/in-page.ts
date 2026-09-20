@@ -95,9 +95,20 @@ export function snapshotInPage({ storageKey, selectors, expected }: SnapshotArgs
     } catch {
       continue;
     }
-    if (el && el.offsetParent !== null && el.getBoundingClientRect().height > 0) {
-      matched = sel;
-      break;
+    // Not offsetParent: it is null for position: fixed, which is how consent bars are placed.
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      if (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        style.visibility !== 'hidden' &&
+        style.display !== 'none' &&
+        style.opacity !== '0'
+      ) {
+        matched = sel;
+        break;
+      }
     }
   }
   return { keys, containing, aff, scripts, matched, title: document.title };

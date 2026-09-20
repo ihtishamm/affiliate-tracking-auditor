@@ -168,13 +168,33 @@ function valueSaysPii(value: string, known: KnownIdentity | undefined): boolean 
 }
 
 function containsTypedValue(value: string, known: KnownIdentity): boolean {
-  const haystack = value.toLowerCase();
+  // A value that is itself a URL (the pixel's `dl`, a referrer) is judged by its query and
+  // fragment only: typed data travels in query strings, while a hostname or path can
+  // coincidentally contain a name (the demo store's domain contains "auditor").
+  const haystack = (/^https?:\/\//i.test(value) ? queryAndFragment(value) : value).toLowerCase();
   const typed = [...(known.values ?? []), known.email, known.phone];
   for (const t of typed) {
     // Short strings ("NY", "1") would match everything; three characters is the floor.
     if (t && t.length >= 3 && haystack.includes(t.toLowerCase())) return true;
   }
   return false;
+}
+
+function queryAndFragment(url: string): string {
+  try {
+    const u = new URL(url);
+    // URLSearchParams decodes `+` and %XX; a typed "350 5th Ave" arrives as 350+5th+Ave.
+    const values = [...u.searchParams.values()].join('\n');
+    let hash = u.hash;
+    try {
+      hash = decodeURIComponent(u.hash);
+    } catch {
+      /* keep raw */
+    }
+    return `${values}\n${hash}`;
+  } catch {
+    return url;
+  }
 }
 
 function hashGuess(value: string): 'sha256' | 'sha1' | 'md5' | null {
@@ -208,6 +228,14 @@ function normalisedVerdict(value: string, known: KnownIdentity | undefined): boo
 
 /** The rule for one parameter. Exported so the tests can pin every branch. */
 export function classifyParam(key: string, value: string, known?: KnownIdentity): ParamValue {
+  // Nothing to protect in an empty value, whatever its name: Meta's automatic advanced
+  // matching sends `cud[em]=` when it found no field, and that is not a plaintext email.
+  if (value === '') return { kind: 'value', value: '' };
+  // Meta's pixel sends `cud[em]`/`ncud[em]`: the detected form value with every letter and
+  // digit replaced by `*` (observed: 21 characters for a 21-character email). A shape signal,
+  // neither plaintext nor a hash, so it must not be judged as either — and a mask still tells
+  // the length and where the dots are, so the mask itself is not kept.
+  if (!/[A-Za-z0-9]/.test(value)) return { kind: 'value', value: '[masked]' };
   const leaf = leafOf(key);
   if (SECRET_LEAF_PATTERN.test(leaf)) return { kind: 'secret', present: true };
   if (nameSaysPii(leaf) || valueSaysPii(value, known)) {

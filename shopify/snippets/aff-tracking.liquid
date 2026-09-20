@@ -20,7 +20,7 @@
   Break-it toggles (M2) arrive as the `__break` URL parameter, are captured and written to the
   cart exactly like the attribution parameters, and change this snippet's behaviour:
     strip_event_id  → events are sent without an event_id
-    double_fire     → PageView fires twice, with different event_ids
+    double_fire     → PageView is also sent as the <noscript> fallback image, for everyone
 
   Constants below mirror packages/shared/src/tracking.ts and break-it.ts. Change both or neither.
 {%- endcomment -%}
@@ -258,8 +258,15 @@
       try {
         loadPixel();
         track(record, 'PageView');
-        // Sabotage: a second PageView with a different event_id, as two pixel installs would produce.
-        if (has(record, 'double_fire')) track(record, 'PageView');
+        // Sabotage: the base code's <noscript> fallback image, pasted outside <noscript> — the
+        // way a second install usually looks in the wild. It sends a second PageView for every
+        // visitor, with no event_id, and nothing can deduplicate an image request. (A second
+        // fbq('track', 'PageView') call would not do: fbevents.js drops a repeated PageView
+        // within one page load — verified on this store — so that sabotage would be invisible.)
+        if (has(record, 'double_fire')) {
+          var dup = new Image(1, 1);
+          dup.src = 'https://www.facebook.com/tr?id=' + encodeURIComponent(PIXEL_ID) + '&ev=PageView&noscript=1';
+        }
         if (product) {
           track(record, 'ViewContent', {
             content_ids: [String(product.id)],

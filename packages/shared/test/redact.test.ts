@@ -67,6 +67,33 @@ describe('classifyParam — the value test', () => {
     expect(classifyParam('ev', 'PageView', { values: ['NY'] }).kind).toBe('value'); // too short to count
   });
 
+  it('a URL value is judged by its query, not its host: "auditor" in the domain is not the typed name', () => {
+    const known = { values: ['Auditor', '350 5th Ave'] };
+    expect(
+      classifyParam('dl', 'https://auditor-demo.myshopify.com/checkouts/cn/abc/thank-you', known)
+        .kind,
+    ).toBe('value');
+    expect(classifyParam('dl', 'https://shop.example/search?q=350+5th+Ave', known).kind).toBe(
+      'pii',
+    );
+  });
+
+  it("Meta's masked field copies (cud[em]=^****.***@***) are recorded as [masked], not judged", () => {
+    expect(classifyParam('cud[em]', '^****.***@*******.***')).toEqual({
+      kind: 'value',
+      value: '[masked]',
+    });
+    expect(classifyParam('ncud[em]', '*****.***@*******.***')).toEqual({
+      kind: 'value',
+      value: '[masked]',
+    });
+  });
+
+  it('an empty value is never PII, even under em/ph (Meta sends cud[em]= when it scraped nothing)', () => {
+    expect(classifyParam('cud[em]', '')).toEqual({ kind: 'value', value: '' });
+    expect(classifyParam('email', '')).toEqual({ kind: 'value', value: '' });
+  });
+
   it('a 64-hex value under a non-PII name is kept: it is an ID or a signature, not a person', () => {
     expect(classifyParam('event_id', hashedNormalised).kind).toBe('value');
   });

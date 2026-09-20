@@ -4,8 +4,9 @@
 //
 // Toggle state travels with the attribution data rather than living in a database: it is a URL
 // parameter on the advertorial, forwarded by /go into the store, captured by the storefront
-// snippet like a UTM, written as a cart attribute, read by the checkout pixel from
-// checkout.customAttributes and (M3) by the webhook handler from note_attributes. Every stage that
+// snippet like a UTM into the `_aff` cookie and the cart attributes, read by the checkout pixel
+// from the cookie (cart attributes were observed not to reach checkout.customAttributes) and
+// (M3) by the webhook handler from the order's note_attributes. Every stage that
 // must misbehave can therefore see the instruction, including the two that run inside Shopify's
 // sandbox with no access to our backend. A run is fully described by its URL.
 //
@@ -65,7 +66,7 @@ export const BREAK_TOGGLE_INFO: Record<BreakToggle, BreakToggleInfo> = {
   double_fire: {
     label: 'Double-fire the pixel',
     breaks:
-      'PageView fires twice per page with different event_ids: the signature of two pixel installs (theme plus app) that nobody noticed.',
+      'PageView is sent twice per page: once by the JavaScript pixel and once by the <noscript> fallback image pasted outside <noscript> — the signature of a second install nobody noticed. Every page view counts twice.',
     actsIn: 'storefront snippet',
     caughtBy: [7],
   },

@@ -37,7 +37,7 @@ export const RUN_LIMITS = {
   backoffMs: 5_000,
   concurrency: 2,
   maxRedirectHops: 10,
-  maxTraceRequests: 2_000,
+  maxTraceRequests: 4_000, // a Shopify checkout alone is ~1 000 requests of telemetry
   traceTtlDays: 7,
   rateLimitPerHour: 5,
   maxQueueDepth: 20,
@@ -174,8 +174,8 @@ export const runTraceSchema = z.object({
   steps: z.array(pageSnapshotSchema),
   requests: z.array(traceRequestSchema),
   requestsTruncated: z.boolean(),
-  /** Learned from the Purchase pixel request (`eid=purchase-<id>`), the same way Meta learns it. */
-  order: z.object({ id: z.string(), purchaseEventId: z.string() }).nullable(),
+  /** Learned from the Purchase pixel request (`eid=purchase-<id>`, else `cd[order_id]`), the same way Meta learns it. `purchaseEventId` is null when the pixel sent no event id. */
+  order: z.object({ id: z.string(), purchaseEventId: z.string().nullable() }).nullable(),
   outcome: z.object({
     reachedStep: z.enum(FUNNEL_STEPS),
     stopReason: z.string(),
