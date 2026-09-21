@@ -70,6 +70,31 @@ describe('receiveShopifyOrder', () => {
     expect(stored).not.toMatch(/Buyer@Example|Seattle|happy birthday/);
   });
 
+  it("records the auditor's own run prefix from its synthetic checkout email, and nothing else from it", async () => {
+    const store = memoryStore();
+    const sample = JSON.stringify({
+      ...order,
+      email: 'audit-1a2b3c4d@example.com',
+      note_attributes: [],
+    });
+    const out = await receiveShopifyOrder(sample, headers({ hmac: signBase64(secret, sample) }), {
+      secret,
+      insert: store.insert,
+      log,
+    });
+    expect(out.status).toBe(200);
+    expect(store.inserted[0]?.order.attribution).toEqual({ __audit_run: '1a2b3c4d' });
+    expect(JSON.stringify(store.inserted[0])).not.toMatch(/@example\.com/);
+    // A real customer's email leaves no trace at all.
+    const real = JSON.stringify({ ...order, email: 'jane@example.org', note_attributes: [] });
+    await receiveShopifyOrder(real, headers({ hmac: signBase64(secret, real), eventId: 'evt-2' }), {
+      secret,
+      insert: store.insert,
+      log,
+    });
+    expect(store.inserted[1]?.order.attribution).toEqual({});
+  });
+
   it('REPLAY: a redelivery with the same X-Shopify-Event-Id is 200 duplicate and returns no order to act on', async () => {
     const store = memoryStore();
     await receiveShopifyOrder(body, headers(), { secret, insert: store.insert, log });

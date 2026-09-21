@@ -154,6 +154,12 @@ export async function receiveShopifyOrder(
   const eventId = headers.eventId ?? headers.webhookId ?? `order-${orderId}`;
 
   const attribution: Record<string, string> = {};
+  // The auditor's runner checks out as audit-<run id prefix>@example.com. That prefix is our
+  // own synthetic identity, not a customer's, and keeping it lets the reconciliation (M7) tie
+  // an order to the run that placed it even when the run never learned the order id (a
+  // pixel that did not fire). The email itself is still never stored.
+  const auditRun = /^audit-([0-9a-f]{8})@example\.com$/i.exec(o.email ?? '')?.[1];
+  if (auditRun) attribution['__audit_run'] = auditRun.toLowerCase();
   for (const attr of o.note_attributes) {
     if (!attr.value) continue;
     if (

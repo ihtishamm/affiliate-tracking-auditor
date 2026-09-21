@@ -7,7 +7,7 @@ received postbacks and names the order IDs that went missing.
 
 **Live demo:** _M10_
 
-> Status: M6 (report UI) in progress. Sections marked _Mn_ are written when that module lands.
+> Status: M7 (reconciliation) in progress. Sections marked _Mn_ are written when that module lands.
 
 ## Tracking teardown: five ways attribution silently breaks on duplicate funnels
 
@@ -176,10 +176,33 @@ The report URL is the share link.
 Meta's CDN sometimes answers a network with `Cross-Origin-Resource-Policy: same-origin` on
 `fbevents.js`, which every browser refuses to run cross-site (`ERR_BLOCKED_BY_RESPONSE`). A
 run from such a network sees a pixel that never fires. That is a fact about the auditor's
-egress, not the funnel, so check 4 reports it as *undecided* with that exact reason — the base
+egress, not the funnel, so check 4 reports it as _undecided_ with that exact reason — the base
 code was requested on every page, the script was not served — and the worker's `/health`
 carries a `meta_cdn` probe (a real Chromium load at boot) so the condition is visible before
 anyone reads a report. First observed 2026-09-21, from two networks at once.
+
+## Reconciliation
+
+`/reconcile?from=&to=` is the merchant's screen: every order Shopify reports for the window
+(GraphQL Admin API, the source of truth) against what the tracking chain did for each —
+
+    order → click ID on the order → webhook received → browser Purchase → server Purchase → postback accepted
+
+The first missing stage is the drop-off and explains everything after it; the page names the
+order, the stage, and why. Sources: the Admin API for orders (`customAttributes` only — the
+query requests no customer fields, which is the PII boundary), `shopify_webhook_events`,
+`run_traces` (the order id the runner learned from the Purchase pixel), `conversion_attempts`
+and `postback_events`. The join is pure (`packages/checks/src/reconcile.ts`).
+
+Two honesty rules. A real customer's order was watched by no browser, so its browser column
+is _not watched_, never _missing_; only orders the auditor's own runner placed (recognised by
+its synthetic checkout email, `audit-<run>@example.com`, recorded as a run prefix on the
+webhook row — the email itself is never stored) can be _missing_. And the Admin client reads
+`extensions.cost.throttleStatus` from every response and waits for the bucket to refill
+before the next page, rather than hitting the 429; a 429 is honoured via `Retry-After`.
+
+Needs `SHOPIFY_ADMIN_TOKEN` (a custom app with the `read_orders` scope only); without it the
+page says so.
 
 ## PII handling
 

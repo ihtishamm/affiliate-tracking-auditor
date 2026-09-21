@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
+import Link from 'next/link';
 import { CLICK_ID_PARAM, RUN_LIMITS } from '@auditor/shared';
 import { DemoForm } from './demo-form.tsx';
 
@@ -107,6 +108,10 @@ export default async function HomePage() {
         >
           Walk the demo funnel yourself
         </a>
+        {' · '}
+        <Link className="underline" href="/reconcile">
+          Reconciliation: orders vs pixel vs CAPI vs postbacks
+        </Link>
         {' · '}
         <a className="underline" href="https://github.com/ihtishamm/affiliate-tracking-auditor">
           Source

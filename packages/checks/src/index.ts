@@ -69,3 +69,11 @@ export type {
   CheckStatus,
   ServerEvents,
 } from './types.ts';
+export { reconcile } from './reconcile.ts';
+export type {
+  DropOff,
+  OrderLine,
+  ReconcileOrder,
+  ReconcileSources,
+  Reconciliation,
+} from './reconcile.ts';

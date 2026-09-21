@@ -50,6 +50,9 @@ export const webEnv = baseEnv
     META_CAPI_TOKEN: z.string().min(16),
     // M3, optional: Events Manager → Test events code, so server events appear in that tool.
     META_TEST_EVENT_CODE: z.string().optional(),
+    // M7, optional: Admin API access token of a custom app with the read_orders scope only
+    // (Settings → Apps → Develop apps). Without it /reconcile explains what to configure.
+    SHOPIFY_ADMIN_TOKEN: z.string().min(16).optional(),
     // M4: BullMQ producer and per-IP rate-limit counters. On Vercel this is the Railway Redis
     // TCP-proxy URL (password, no TLS); the worker keeps the private-network URL.
     REDIS_URL: z.url({ protocol: /^rediss?$/ }),
