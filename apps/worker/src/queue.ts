@@ -65,6 +65,13 @@ export function startQueueWorker(deps: QueueDeps): {
           proxy: deps.proxy,
           storefrontPassword: deps.storefrontPassword,
           log,
+          // Progress for the live status page: one `running` event per funnel step. Appended,
+          // never awaited on the hot path — a slow insert must not slow the browser.
+          onStep: (step) => {
+            void deps
+              .appendEvent(data.runId, 'running', attempt, { step })
+              .catch((err: unknown) => log.warn('progress event failed', { err }));
+          },
         }),
       );
       const bytes = await deps.insertTrace(result.trace);

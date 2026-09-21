@@ -7,7 +7,7 @@ received postbacks and names the order IDs that went missing.
 
 **Live demo:** _M10_
 
-> Status: M5 (check engine) in progress. Sections marked _Mn_ are written when that module lands.
+> Status: M6 (report UI) in progress. Sections marked _Mn_ are written when that module lands.
 
 ## Tracking teardown: five ways attribution silently breaks on duplicate funnels
 
@@ -147,6 +147,29 @@ fails). The rationale for every check — what breaks in the real world when it 
 Reports are computed when a run is read, not stored: the server rows arrive seconds after
 the run ends, and a report frozen at completion would stay inconclusive about events that
 exist. The tests run the engine over real traces of the demo funnel, one per break-it toggle.
+
+## The report
+
+`/` is one field and one button, plus the demo funnel with its break-it switches on the same
+page, so a reviewer reaches a report without instructions (§6 M6). Submitting posts a plain
+form; the run page then polls its own JSON every 2 s, shows the furthest funnel step the worker
+has reported (`run_events` rows with a `step`), and re-renders itself once the run is terminal.
+The report is one server render from the stored trace and the server rows:
+
+- the **score** (passes ÷ decided) with pass / fail / undecided counts and a one-line verdict;
+- **which switches were on**, read from the run's entry URL, and on each failed card the switch
+  that caused it — the demo's proof that a toggle is caught by the check that claims it;
+- **Fix this first**: the failed check whose fix removes the most downstream failures, in
+  root-cause order (redirect handoff → UTMs → persistence → consent → pixel presence →
+  duplicates → event ids → hashing → CAPI dedup → postback), not check-number order;
+- the ten checks, failures first, each with observed / expected / why / fix;
+- a **waterfall** of what the browser saw: every main-frame hop as a bar, every pixel,
+  container, cart-attribute and postback request as a mark on the same clock — inline SVG,
+  hover for the redacted detail; the ~2 000 other requests stay in the JSON;
+- run details (entry URL, what was injected, the CTA rule that matched, robots.txt, the log).
+
+No design system, no chart library, no client state beyond the poller and a copy-link button.
+The report URL is the share link.
 
 ## PII handling
 

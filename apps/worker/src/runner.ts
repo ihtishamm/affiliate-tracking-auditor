@@ -32,6 +32,7 @@ export interface RunnerDeps {
   storefrontPassword: string | undefined;
   log: Logger;
   fetch?: typeof fetch;
+  onStep?: (step: FunnelStep) => void;
 }
 
 export class RunTimeout extends Error {
@@ -111,6 +112,7 @@ export async function executeRun(job: RunJob, deps: RunnerDeps): Promise<RunResu
         storefrontPassword: deps.storefrontPassword,
         identity,
         log,
+        ...(deps.onStep ? { onStep: deps.onStep } : {}),
       }),
       deadline,
     ]);

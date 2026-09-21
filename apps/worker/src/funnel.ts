@@ -33,6 +33,8 @@ export interface FunnelDeps {
   storefrontPassword: string | undefined;
   identity: FunnelIdentity;
   log: Logger;
+  /** Called as each step begins, so the run's status can show progress while it runs. */
+  onStep?: (step: FunnelStep) => void;
 }
 
 export interface FunnelResult {
@@ -52,13 +54,17 @@ class StopRun extends Error {
 
 export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<FunnelResult> {
   const { page, collector, log } = deps;
+  const enter = (step: FunnelStep): void => {
+    collector.setStep(step);
+    deps.onStep?.(step);
+  };
   let cta: RunTrace['cta'] = null;
   let mode: RunTrace['mode'] = 'observe';
   let reached: FunnelStep = 'landing';
 
   try {
     // ---- landing ----
-    collector.setStep('landing');
+    enter('landing');
     await page.goto(entryUrl, { waitUntil: 'load', timeout: STEP_TIMEOUT_MS });
     await settle(page);
     if (collector.blocked) throw new StopRun('landing', `blocked: ${collector.blocked}`);
@@ -66,7 +72,7 @@ export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<F
 
     // ---- CTA ----
     reached = 'cta';
-    collector.setStep('cta');
+    enter('cta');
     const pick = await findCta(page);
     if (!pick) throw new StopRun('landing', 'no call-to-action link found on the landing page');
     cta = { rule: pick.rule, href: pick.href, text: pick.text };
@@ -83,14 +89,14 @@ export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<F
 
     // ---- store ----
     reached = 'store';
-    collector.setStep('store');
+    enter('store');
     if (collector.blocked) throw new StopRun('cta', `blocked: ${collector.blocked}`);
     await passStorefrontPassword(page, deps);
     await collector.snapshot(page, 'store');
 
     // ---- product ----
     reached = 'product';
-    collector.setStep('product');
+    enter('product');
     if (!/\/products\//.test(page.url())) {
       const link = page.locator('a[href*="/products/"]:visible').first();
       if ((await link.count()) === 0)
@@ -118,7 +124,7 @@ export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<F
 
     // ---- cart ----
     reached = 'cart';
-    collector.setStep('cart');
+    enter('cart');
     if (!add)
       throw new StopRun(
         'product',
@@ -141,7 +147,7 @@ export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<F
 
     // ---- checkout ----
     reached = 'checkout';
-    collector.setStep('checkout');
+    enter('checkout');
     const checkoutButton = page
       .locator('button[name="checkout"], a[href*="/checkout"], [data-checkout]')
       .first();
@@ -173,7 +179,7 @@ export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<F
     // ---- payment (demo store only) ----
     reached = 'payment';
     mode = 'purchase';
-    collector.setStep('payment');
+    enter('payment');
     // Everything about to be typed, so any echo of it (checkout telemetry, address
     // autocomplete) is redacted wherever it appears.
     const id = deps.identity;
@@ -193,7 +199,7 @@ export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<F
 
     // ---- thank you ----
     reached = 'thank_you';
-    collector.setStep('thank_you');
+    enter('thank_you');
     await payAndWait(page).catch((err: unknown) => {
       throw new StopRun('payment', `payment did not complete: ${message(err)}`);
     });
