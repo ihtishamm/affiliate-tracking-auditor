@@ -171,6 +171,16 @@ The report is one server render from the stored trace and the server rows:
 No design system, no chart library, no client state beyond the poller and a copy-link button.
 The report URL is the share link.
 
+### When the auditor itself cannot see
+
+Meta's CDN sometimes answers a network with `Cross-Origin-Resource-Policy: same-origin` on
+`fbevents.js`, which every browser refuses to run cross-site (`ERR_BLOCKED_BY_RESPONSE`). A
+run from such a network sees a pixel that never fires. That is a fact about the auditor's
+egress, not the funnel, so check 4 reports it as *undecided* with that exact reason — the base
+code was requested on every page, the script was not served — and the worker's `/health`
+carries a `meta_cdn` probe (a real Chromium load at boot) so the condition is visible before
+anyone reads a report. First observed 2026-09-21, from two networks at once.
+
 ## PII handling
 
 The runner watches a live funnel's traffic, so on a reviewer's own store it is watching their

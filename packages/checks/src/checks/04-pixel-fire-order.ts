@@ -24,6 +24,22 @@ export const pixelFireOrder: Check = {
   title: 'Pixel load and fire order',
   run(ctx) {
     if (ctx.hits.length === 0) {
+      // The base code asked for the script and did not get it: the funnel has a pixel, the
+      // auditor's network could not load it. That is a fact about the auditor, not the funnel
+      // (Meta's CDN answers some datacenter addresses with a response Chromium refuses), and
+      // it must not be reported as a missing pixel (§3).
+      const loads = ctx.pixelScriptLoads();
+      const failed = loads.filter((l) => l.failure || (l.status !== null && l.status >= 400));
+      if (loads.length > 0 && failed.length === loads.length) {
+        const why = failed[0]?.failure ?? `HTTP ${failed[0]?.status}`;
+        return inconclusive({
+          observed: `the pixel base code requested fbevents.js on ${loads.length} page(s), and every load failed (${why})`,
+          expected: 'the pixel script to load and fire PageView',
+          reason:
+            "Meta's CDN did not serve the pixel script to the auditor's network, so nothing the pixel would have done could be observed; the funnel is not at fault",
+          fixHint: '',
+        });
+      }
       if (!ctx.reached('store')) {
         return inconclusive({
           observed: 'no Meta pixel requests',

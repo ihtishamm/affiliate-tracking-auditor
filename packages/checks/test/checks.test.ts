@@ -244,6 +244,39 @@ describe("a stranger's funnel (observe mode)", () => {
   });
 });
 
+describe('when the auditor itself is the problem', () => {
+  it("a pixel that was requested but not served is undecided, not 'no pixel installed'", () => {
+    const clean = fixture('clean');
+    const blocked: RunTrace = {
+      ...clean,
+      requests: clean.requests
+        .filter((r) => !(/facebook\.com$/.test(r.host) && /\/tr\/?$/.test(r.url)))
+        .map((r) =>
+          /facebook\.net$/.test(r.host) && /fbevents\.js$/.test(r.url)
+            ? { ...r, status: null, failure: 'net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin' }
+            : r,
+        ),
+    };
+    const r = byId(runChecks({ trace: blocked, server: null }).results, 'pixel_fire_order');
+    expect(r.status).toBe('inconclusive');
+    expect(r.observed).toMatch(
+      /requested fbevents\.js on \d+ page\(s\), and every load failed \(net::ERR_BLOCKED_BY_RESPONSE/,
+    );
+    expect(r.reason).toMatch(/not at fault/);
+  });
+
+  it('a funnel that never requests the pixel script at all still fails check 4', () => {
+    const clean = fixture('clean');
+    const none: RunTrace = {
+      ...clean,
+      requests: clean.requests.filter((r) => !/facebook\.(com|net)$/.test(r.host)),
+    };
+    expect(byId(runChecks({ trace: none, server: null }).results, 'pixel_fire_order').status).toBe(
+      'fail',
+    );
+  });
+});
+
 describe('the engine itself', () => {
   it('a check that throws is inconclusive, never a pass, and the other nine still run', () => {
     const trace = fixture('clean');

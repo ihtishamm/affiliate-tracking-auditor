@@ -51,6 +51,13 @@ async function main(): Promise<void> {
   // here, not on the first job.
   const browser = await launchBrowser(proxy.server, log);
 
+  // Meta's CDN answers some datacenter addresses with a response Chromium refuses to run
+  // (Cross-Origin-Resource-Policy: same-origin → ERR_BLOCKED_BY_RESPONSE). A run from such a
+  // worker sees a pixel that never fires — a fact about this worker's egress, not the funnel.
+  // Probed once at boot, from Chromium through the proxy exactly as a run would load it, and
+  // reported by /health so it is visible without reading a trace.
+  const metaCdn = browser ? await probeMetaPixelScript(browser, log) : null;
+
   const health = startHealthServer(env.PORT, {
     version,
     log,
@@ -60,12 +67,12 @@ async function main(): Promise<void> {
       browser: () => Promise.resolve<ProbeResult>(browser?.isConnected() ? 'ok' : 'error'),
     },
     extra: async () => {
-      if (!queue) return {};
+      if (!queue) return { meta_cdn: metaCdn };
       const counts = await withTimeout(
         queue.worker.isRunning() ? getCounts() : Promise.resolve({}),
         2_000,
       );
-      return { queue: counts };
+      return { queue: counts, meta_cdn: metaCdn };
     },
   });
 
@@ -110,6 +117,57 @@ async function main(): Promise<void> {
   };
   process.once('SIGTERM', () => shutdown('SIGTERM'));
   process.once('SIGINT', () => shutdown('SIGINT'));
+}
+
+interface MetaPixelScriptProbe {
+  /** Whether Chromium accepted the script from connect.facebook.net. */
+  loads: boolean;
+  status: number | null;
+  failure: string | null;
+}
+
+async function probeMetaPixelScript(browser: Browser, log: Logger): Promise<MetaPixelScriptProbe> {
+  const context = await browser.newContext({
+    userAgent:
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
+  });
+  try {
+    const page = await context.newPage();
+    const outcome = new Promise<MetaPixelScriptProbe>((resolve) => {
+      page.on('requestfinished', (r) => {
+        if (/fbevents\.js$/.test(r.url())) {
+          void r
+            .response()
+            .then((res) => resolve({ loads: true, status: res?.status() ?? null, failure: null }));
+        }
+      });
+      page.on('requestfailed', (r) => {
+        if (/fbevents\.js$/.test(r.url()))
+          resolve({ loads: false, status: null, failure: r.failure()?.errorText ?? 'failed' });
+      });
+    });
+    // A real document origin, so the script request looks like every site's (Sec-Fetch-Site:
+    // cross-site, a Referer); from about:blank Facebook serves the variant Chromium refuses.
+    // The page itself is fulfilled locally and never touches the network.
+    await page.route('https://probe.auditor.invalid/', (route) =>
+      route.fulfill({
+        contentType: 'text/html',
+        body: '<!doctype html><title>probe</title><script src="https://connect.facebook.net/en_US/fbevents.js"></script>',
+      }),
+    );
+    await page
+      .goto('https://probe.auditor.invalid/', { waitUntil: 'load', timeout: 10_000 })
+      .catch(() => undefined);
+    const probe = await withTimeout(outcome, 10_000);
+    (probe.loads ? log.info : log.warn).call(log, 'meta pixel script probe', { ...probe });
+    return probe;
+  } catch (err) {
+    const failure = err instanceof Error ? err.message : String(err);
+    log.warn('meta pixel script probe failed', { err: failure });
+    return { loads: false, status: null, failure };
+  } finally {
+    await context.close().catch(() => undefined);
+  }
 }
 
 async function launchBrowser(proxyServer: string, log: Logger): Promise<Browser | null> {

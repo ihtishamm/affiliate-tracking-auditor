@@ -103,6 +103,16 @@ export class CheckContext {
     return this.hits.filter((h) => h.event === event);
   }
 
+  /**
+   * Loads of Meta's pixel script (`connect.facebook.net/…/fbevents.js`): proof the base code is
+   * installed even when no event followed, and — via `failure` — whether the CDN served it.
+   */
+  pixelScriptLoads(): Array<{ step: string; status: number | null; failure: string | null }> {
+    return this.trace.requests
+      .filter((r) => /(^|\.)facebook\.net$/.test(r.host) && /fbevents\.js$/.test(r.url))
+      .map((r) => ({ step: r.step, status: r.status, failure: r.failure }));
+  }
+
   /** Requests to a host matching `pattern`. */
   requestsTo(pattern: RegExp): TraceRequest[] {
     return this.trace.requests.filter((r) => pattern.test(r.host));
