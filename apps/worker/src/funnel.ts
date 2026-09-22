@@ -1,5 +1,11 @@
 import type { Locator, Page } from 'playwright';
-import type { FunnelStep, Logger, RunTrace } from '@auditor/shared';
+import {
+  scrubText,
+  type FunnelStep,
+  type KnownIdentity,
+  type Logger,
+  type RunTrace,
+} from '@auditor/shared';
 import { findCtaInPage, type CtaPick } from './in-page.ts';
 import type { TraceCollector } from './trace.ts';
 
@@ -24,6 +30,25 @@ export interface FunnelIdentity {
   city: string;
   zone: string;
   postalCode: string;
+}
+
+/**
+ * What the runner typed, in the shape the redaction rules take. One definition, used twice:
+ * to classify the parameters of every request during checkout, and to scrub the free text of
+ * any error the run stores. Both need the same list or one of them leaks what the other hides.
+ */
+export function knownIdentityOf(identity: FunnelIdentity): KnownIdentity {
+  return {
+    email: identity.email,
+    values: [
+      identity.firstName,
+      identity.lastName,
+      `${identity.firstName} ${identity.lastName}`,
+      identity.address1,
+      identity.city,
+      identity.postalCode,
+    ],
+  };
 }
 
 export interface FunnelDeps {
@@ -54,6 +79,7 @@ class StopRun extends Error {
 
 export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<FunnelResult> {
   const { page, collector, log } = deps;
+  const known = knownIdentityOf(deps.identity);
   const enter = (step: FunnelStep): void => {
     collector.setStep(step);
     deps.onStep?.(step);
@@ -182,25 +208,14 @@ export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<F
     enter('payment');
     // Everything about to be typed, so any echo of it (checkout telemetry, address
     // autocomplete) is redacted wherever it appears.
-    const id = deps.identity;
-    collector.setKnownIdentity({
-      email: id.email,
-      values: [
-        id.firstName,
-        id.lastName,
-        `${id.firstName} ${id.lastName}`,
-        id.address1,
-        id.city,
-        id.postalCode,
-      ],
-    });
+    collector.setKnownIdentity(known);
     await fillCheckout(page, deps.identity);
     await collector.snapshot(page, 'payment');
 
     // ---- thank you ----
     reached = 'thank_you';
     enter('thank_you');
-    await payAndWait(page).catch((err: unknown) => {
+    await payAndWait(page, known).catch((err: unknown) => {
       throw new StopRun('payment', `payment did not complete: ${message(err)}`);
     });
     // The Purchase pixel hit is the one observation this step exists for, and the checkout
@@ -211,13 +226,20 @@ export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<F
     await collector.snapshot(page, 'thank_you');
     return { reachedStep: 'thank_you', stopReason: 'purchase completed', mode, cta };
   } catch (err) {
+    // The one place a failure becomes text that gets stored, so the one place §8 has to hold
+    // for it. Playwright quotes the whole failing URL in its messages — query string and all —
+    // and on a reviewer's funnel that query can carry their customer's data.
     if (err instanceof StopRun) {
-      log.info('funnel stopped', { step: err.step, reason: err.message });
-      return { reachedStep: err.step, stopReason: err.message, mode, cta };
+      const reason = scrubText(err.message, known);
+      log.info('funnel stopped', { step: err.step, reason });
+      return { reachedStep: err.step, stopReason: reason, mode, cta };
     }
-    throw Object.assign(err instanceof Error ? err : new Error(String(err)), {
-      reachedStep: reached,
-    });
+    const failure = err instanceof Error ? err : new Error(String(err));
+    failure.message = scrubText(failure.message, known);
+    // BullMQ keeps the stack with the failed job, and Playwright repeats the URL in its first
+    // line; the frames are kept because they are what makes a worker bug diagnosable.
+    if (failure.stack) failure.stack = scrubText(failure.stack, known, 4_000);
+    throw Object.assign(failure, { reachedStep: reached });
   }
 }
 
@@ -301,7 +323,7 @@ async function passStorefrontPassword(page: Page, deps: FunnelDeps): Promise<boo
  * bounded wait, and try again up to three times. If the page shows an error, that text is the
  * failure reason, not a bare timeout.
  */
-async function payAndWait(page: Page): Promise<void> {
+async function payAndWait(page: Page, known: KnownIdentity): Promise<void> {
   const pay = page
     .locator('#checkout-pay-button, button:has-text("Pay now"), button:has-text("Complete order")')
     .first();
@@ -326,8 +348,10 @@ async function payAndWait(page: Page): Promise<void> {
         els.map((e) => (e.textContent ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean),
       )
       .catch(() => [] as string[]);
+    // The banner is a stranger's text quoting what was typed into it ("We can't ship to 350
+    // 5th Ave"), and it ends up in the stored stop reason: scrub before it is a value at all.
     if (errors.length > 0)
-      lastError = `checkout reported: ${[...new Set(errors)].join(' | ').slice(0, 300)}`;
+      lastError = `checkout reported: ${scrubText([...new Set(errors)].join(' | '), known)}`;
   }
   throw new Error(lastError);
 }

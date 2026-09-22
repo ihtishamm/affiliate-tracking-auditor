@@ -13,7 +13,16 @@ let originPort = 0;
 let proxy: EgressProxy;
 
 beforeAll(async () => {
-  origin = createServer((req, res) => res.end(`hello from origin ${req.headers.host} ${req.url}`));
+  origin = createServer((req, res) => {
+    // A funnel that bounces the browser at the cloud metadata service: the first request is
+    // ordinary, the danger is in the Location header (see the redirect test below).
+    if (req.url === '/redirect') {
+      res.writeHead(302, { location: 'http://metadata.test/latest/meta-data/' });
+      res.end();
+      return;
+    }
+    res.end(`hello from origin ${req.headers.host} ${req.url}`);
+  });
   await new Promise<void>((r) => origin.listen(0, '127.0.0.1', r));
   originPort = (origin.address() as { port: number }).port;
   proxy = await startEgressProxy({
@@ -54,7 +63,10 @@ function rawConnect(target: string): Promise<string> {
   });
 }
 
-function viaProxy(url: string): Promise<{
+function viaProxy(
+  url: string,
+  port = proxyPort(),
+): Promise<{
   status: number;
   headers: Record<string, string | string[] | undefined>;
   body: string;
@@ -63,7 +75,7 @@ function viaProxy(url: string): Promise<{
     const req = httpRequest(
       {
         host: '127.0.0.1',
-        port: proxyPort(),
+        port,
         method: 'GET',
         path: url,
         headers: { host: new URL(url).host },
@@ -142,6 +154,34 @@ describe('egress proxy', () => {
       });
       expect(reply).toMatch(/^HTTP\/1\.1 403/);
       expect(reply).toMatch(/X-Auditor-Blocked: .*10\.0\.0\.1/);
+    } finally {
+      await strict.close();
+    }
+  });
+
+  it('re-checks after a redirect hop: the Location target is vetted on its own (§9)', async () => {
+    // The hop Playwright's route handler never sees, because Chromium follows a redirect
+    // internally. What Chromium does do is send a SECOND request through the proxy, for the
+    // Location — so the proxy is asked about the redirect target, not about the URL the run
+    // started with. That second request is the one asserted here.
+    //
+    // Two proxies, because the harness's default one allows loopback so that a test origin
+    // server can exist at all; `strict` is the production configuration, and the redirect
+    // target is what it is asked about.
+    const first = await viaProxy(`http://origin.test:${originPort}/redirect`);
+    expect(first.status).toBe(302);
+    const location = String(first.headers['location']);
+    expect(location).toBe('http://metadata.test/latest/meta-data/');
+
+    const strict = await startEgressProxy({
+      log,
+      ssrf: { resolve: async () => ['169.254.169.254'] },
+    });
+    try {
+      const followed = await viaProxy(location, Number(new URL(strict.server).port));
+      expect(followed.status).toBe(403);
+      expect(followed.headers['x-auditor-blocked']).toMatch(/169\.254\.169\.254/);
+      expect(strict.reasonFor('metadata.test')).toMatch(/private|reserved/);
     } finally {
       await strict.close();
     }

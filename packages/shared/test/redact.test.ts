@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyParam, redactBody, redactQuery, redactUrl } from '../src/redact.ts';
+import { classifyParam, redactBody, redactQuery, redactUrl, scrubText } from '../src/redact.ts';
 import { sha256Hex } from '../src/pii.ts';
 
 const email = 'Buyer@Example.com';
@@ -262,5 +262,59 @@ describe('redactBody', () => {
   it('empty and unknown bodies record kind and size only', () => {
     expect(redactBody(null, null)).toEqual({ kind: 'none', bytes: 0, params: {} });
     expect(redactBody('\u0000\u0001binary', 'application/octet-stream').kind).toBe('opaque');
+  });
+});
+
+describe('scrubText — free text that gets stored', () => {
+  // What the runner typed at checkout, in the shape the funnel driver builds it.
+  const typed = {
+    email: 'grace.hopper@example.org',
+    values: ['Grace', 'Hopper', '350 5th Ave', 'New York'],
+  };
+
+  it("keeps a Playwright error's URL readable and loses its query", () => {
+    const scrubbed = scrubText(
+      'page.goto: net::ERR_ABORTED at https://shop.example/checkout?email=buyer@example.com&step=2',
+    );
+    expect(scrubbed).toContain('net::ERR_ABORTED at https://shop.example/checkout');
+    expect(scrubbed).toContain('step=2');
+    expect(scrubbed).not.toContain('buyer@example.com');
+  });
+
+  it('the full stop after a URL is punctuation, not part of the address', () => {
+    expect(scrubText('failed at https://shop.example/a?b=1. Retrying.')).toBe(
+      'failed at https://shop.example/a?b=1. Retrying.',
+    );
+  });
+
+  it('a checkout banner quoting what was typed is scrubbed, and still says what went wrong', () => {
+    const scrubbed = scrubText(
+      "checkout reported: We can't ship to 350 5th Ave, New York — enter a different address",
+      typed,
+    );
+    expect(scrubbed).not.toContain('350 5th Ave');
+    expect(scrubbed).not.toContain('New York');
+    expect(scrubbed).toContain('enter a different address');
+  });
+
+  it('an email or a phone number in prose the runner never typed is still redacted', () => {
+    expect(scrubText('rejected: customer@merchant.co.uk is not a valid address')).toBe(
+      'rejected: [redacted] is not a valid address',
+    );
+    expect(scrubText('could not reach +1 212 555 0147 for confirmation')).toBe(
+      'could not reach [redacted] for confirmation',
+    );
+  });
+
+  it('leaves the numbers that make an error useful: order ids, timestamps, click ids', () => {
+    const text = 'order 5592 at 1758556800000 for click id aud-20260922-0001 was not found';
+    expect(scrubText(text)).toBe(text);
+  });
+
+  it('truncates: an error is a clue, not a document', () => {
+    const long = `x`.repeat(400);
+    const scrubbed = scrubText(long);
+    expect(scrubbed).toHaveLength(301);
+    expect(scrubbed.endsWith('\u2026')).toBe(true);
   });
 });

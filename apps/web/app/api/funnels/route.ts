@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { repo } from '@auditor/db';
+import { RUN_LIMITS } from '@auditor/shared';
 import { getDb } from '@/lib/db.ts';
 import { getEnv } from '@/lib/env.ts';
 import { saveFunnelFromRun } from '@/lib/funnels.ts';
@@ -24,6 +26,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'rate_limited', retry_after_seconds: wait }, { status: 429 });
 
   const db = getDb();
+  // Every saved funnel is a browser run a day, forever. The per-IP limit bounds how fast they
+  // can be added; this bounds how many exist at all (§9).
+  const saved = await repo.countFunnels(db);
+  if (saved >= RUN_LIMITS.maxSavedFunnels) {
+    return NextResponse.json(
+      { error: 'funnel_limit', limit: RUN_LIMITS.maxSavedFunnels },
+      { status: 409 },
+    );
+  }
   const run = await getRun(db, parsed.data.run_id, { trace: false });
   if (!run) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   const purchaseHost =

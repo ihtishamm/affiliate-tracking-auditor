@@ -17,7 +17,9 @@ export function clientKeyFromHeaders(headers: Headers): string {
 }
 
 /** Resolves 0 when allowed, else the seconds until the window resets. */
-export function rateLimiter(redis: Redis, limit = RUN_LIMITS.rateLimitPerHour) {
+// `limit: number`, not the inferred literal: RUN_LIMITS is `as const`, so without the
+// annotation the parameter's type would be `5` and no caller (or test) could pass another.
+export function rateLimiter(redis: Redis, limit: number = RUN_LIMITS.rateLimitPerHour) {
   return async (clientKey: string): Promise<number> => {
     const key = `rl:runs:${clientKey}`;
     const results = await redis.multi().incr(key).expire(key, WINDOW_SECONDS, 'NX').ttl(key).exec();

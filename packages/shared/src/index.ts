@@ -40,7 +40,14 @@ export type { PostbackPayload } from './postback.ts';
 // also bundled into the browser by the advertorial's client components. Server code imports
 // it from '@auditor/shared/ssrf'.
 export type { SsrfOptions, SsrfVerdict } from './ssrf.ts';
-export { classifyParam, redactBody, redactParams, redactQuery, redactUrl } from './redact.ts';
+export {
+  classifyParam,
+  redactBody,
+  redactParams,
+  redactQuery,
+  redactUrl,
+  scrubText,
+} from './redact.ts';
 export type { BodyKind, KnownIdentity, ParamMap, ParamValue, RedactedBody } from './redact.ts';
 export {
   DAILY_CRON,

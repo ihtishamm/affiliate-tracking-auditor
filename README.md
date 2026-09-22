@@ -253,7 +253,36 @@ customers. The rules from PROJECT_CONTEXT §8, and how they are met:
   are not read at all.
 - **URLs** in the trace go through the same classifier (`redactUrl`), including the one you
   submitted. The rate limiter keys on a hash of the client address, so Redis holds no IPs.
+- **Free text is redacted too.** An error message is prose that quotes the thing that failed:
+  Playwright writes `page.goto: net::ERR_ABORTED at https://shop/checkout?email=…`, a checkout
+  banner quotes the address that was typed into it, and Meta's API quotes the parameter it
+  rejected. All three are stored, so all three go through `scrubText` first — it rewrites every
+  URL in the text through `redactUrl`, removes anything the runner typed, and removes bare
+  email and phone shapes. Being an error is not an exemption.
 - **TTL:** traces expire after 7 days and are deleted by the worker.
+
+Every column that holds text derived from a run, and what keeps it safe:
+
+| Column                                                 | What it holds                                 | What redacts it                                                  |
+| ------------------------------------------------------ | --------------------------------------------- | ---------------------------------------------------------------- |
+| `runs.url`, `funnels.url`, `funnels.label`             | the submitted URL                             | `redactUrl` at submission and at save                            |
+| `run_events.detail`                                    | step, host, counts, failure text              | `scrubText` on every error before it is a value                  |
+| `run_traces.trace.requests[].params`                   | every query and body parameter                | `classifyParam`: value, `pii{…}` or `secret{…}`                  |
+| `run_traces.trace.requests[].url`                      | origin + path only                            | the query never leaves `params`                                  |
+| `…steps[].cookies`                                     | cookie names; value only for `_aff`           | names are not values; `foundIn` records containment, not content |
+| `…steps[].localStorageKeys`                            | key names only                                | values are never read                                            |
+| `…steps[].title`, `…outcome.stopReason`                | page title, why the run stopped               | `scrubText`                                                      |
+| `…steps[].scripts`, `…hops[].from`/`to`, `…redirectTo` | URLs                                          | `redactUrl`, told what the runner typed                          |
+| `conversion_attempts.error`                            | the rejection body from Meta or the receiver  | `scrubText`                                                      |
+| `shopify_webhook_events`                               | order id, name, total, attribution attributes | the handler never reads customer fields from the payload         |
+| `postback_events`, `funnel_scores`, `alerts`           | ids, statuses, check names, percentages       | generated here; no funnel content                                |
+
+The invariant is enforced by a test, not by this table: `apps/worker/test/trace-redaction.test.ts`
+drives the collector with a typed identity in a hashed pixel parameter, a masked field copy, a
+JSON telemetry body, a multipart body, a navigation URL and a search query, then searches the
+whole serialised trace — the same JSON that goes to Postgres — for anything the runner typed
+and for anything shaped like an email or a phone number. A field added later that forgets to
+redact fails it without anyone having predicted which field it would be.
 
 ## Abuse prevention
 
@@ -272,14 +301,29 @@ is fenced. PROJECT_CONTEXT §9, and how each rule is enforced:
   and is opened to the address that was checked. A refused hop shows in the trace as
   `blocked` with the reason. Connecting to the vetted address also closes the DNS-rebinding
   window for that connection.
-- **Rate limit:** 5 submissions per hour per client address (fixed window in Redis), checked
-  before the DNS lookup so a flood cannot use the auditor as a resolver. **Global cap:** 20
-  queued jobs → 503; 2 concurrent runs per worker.
+- **Rate limit:** 5 requests per hour per client address (a fixed window in Redis — `EXPIRE NX`,
+  so the window does not slide forward on every hit), checked before the DNS lookup so a flood
+  cannot use the auditor as a resolver. It applies to all three endpoints that can start work:
+  submitting a URL, saving a funnel, and "run now" on a saved funnel. The key is a hash of the
+  address, so Redis holds no IPs. **Global cap:** 20 queued jobs → 503, on the same three
+  endpoints; 2 concurrent runs per worker.
+- **A cap on saved funnels (25).** Saving a funnel is the one public action with a permanent
+  cost: each saved funnel is a browser run every day for as long as the deployment lives. A
+  per-IP rate limit bounds how fast funnels can be added, not how many exist, so the total has
+  its own cap and the daily schedule's work is bounded by it.
 - **Hard timeout:** 90 s per run, enforced in the worker by closing the browser context.
 - **robots.txt** is fetched and evaluated for the landing path and the verdict is shown in the
   report; it does not stop a run, because the person submitting a URL is meant to be its owner.
 - **Purchases only on the demo store.** The job carries the one host where checkout may be
   completed; everywhere else the run ends at the checkout page.
+
+The two guards with the most ways to be subtly wrong have tests named after them:
+`packages/shared/test/ssrf.test.ts` (every blocked range, IPv4-mapped IPv6, a name where only
+one of two addresses is private, a URL that does not resolve), `apps/worker/test/egress-proxy.test.ts`
+including the redirect hop — a 302 to `169.254.169.254` refused when the browser follows
+it, which is the hop no browser-side hook sees — and `apps/web/lib/__tests__/rate-limit.test.ts`
+(the fixed window, the per-client counting, and a Redis failure surfacing instead of being read
+as "allowed").
 
 Known limits, stated rather than hidden: the proxy filters by destination, not by content of
 a TLS tunnel; a funnel that legitimately lives on a non-standard port is refused; the
@@ -354,5 +398,26 @@ Migrations are applied by hand from a machine with the production `DATABASE_URL`
 ### Secrets and rotation
 
 All secrets live in environment variables and are validated at boot
-(`packages/shared/src/env.ts`). None are committed; `gitleaks` runs pre-commit and in CI.
-Rotation procedure: _M9_.
+(`packages/shared/src/env.ts`), so a missing or malformed one fails the deploy rather than the
+first request that needs it. None are committed: `.env` is ignored, the pre-commit hook runs
+`gitleaks` on the staged diff and refuses to run if `gitleaks` is not installed (a scanner that
+silently skips is not a scanner), and CI re-scans the **full history** on every push, because a
+hook can be bypassed locally.
+
+| Secret                                       | Set in                 | What it protects                                                                   | Rotating it                                                                                                                                                                                                             |
+| -------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POSTBACK_HMAC_SECRET`                       | Vercel                 | signs and verifies `/api/postback`; without it anyone could post a fake conversion | `openssl rand -hex 32`, set, redeploy. Signer and verifier are the same deployment, so both halves change at once; a postback in flight during the swap fails and is retried (each try is a `conversion_attempts` row). |
+| `SHOPIFY_WEBHOOK_SECRET`                     | Vercel                 | proves an `orders/create` POST is really Shopify's                                 | Regenerate in Shopify (Settings → Notifications → the webhook), set, redeploy. Shopify retries a failed delivery for 48 h, so nothing is lost if the redeploy is not instant.                                           |
+| `META_CAPI_TOKEN`                            | Vercel                 | permission to send server-side Purchases to the dataset                            | Issue a second system-user token in Events Manager, set it, redeploy, **then** revoke the old one. Both are valid meanwhile, so there is no gap.                                                                        |
+| `SHOPIFY_ADMIN_TOKEN`                        | Vercel (optional)      | `read_orders` for `/reconcile`                                                     | Regenerating it in the custom app kills the old one immediately; `/reconcile` says what is missing until the new value is deployed. Nothing else depends on it.                                                         |
+| `SHOPIFY_STOREFRONT_PASSWORD`                | Railway (optional)     | the dev store's password page                                                      | Change in Shopify, set, redeploy. Only the demo store's runs use it.                                                                                                                                                    |
+| `ALERT_WEBHOOK_SECRET` / `ALERT_WEBHOOK_URL` | Railway (optional)     | signs outgoing alerts (`x-auditor-signature`)                                      | Change on the receiver first, then here. An alert that fails to deliver is still recorded in `alerts`, with the failure in `delivery_error`.                                                                            |
+| `DATABASE_URL`                               | Vercel **and** Railway | everything stored                                                                  | Reset the role's password in Neon, then update both services. Use the **unpooled** host for migrations and the pooled host for the apps.                                                                                |
+| `REDIS_URL`                                  | Vercel **and** Railway | the queue and the rate-limit counters                                              | Rotate the password in Railway, update both. Vercel gets the TCP-proxy URL, the worker keeps the private-network one.                                                                                                   |
+
+If a secret is ever exposed, rotate it **at its source first** — in Shopify, Meta, Neon or
+Railway — so the leaked value stops working, and only then update the deployments. A secret
+that reached a public commit is burned even after the commit is removed, because clones and
+caches keep it; rotation is the only fix, and `gitleaks detect` over the full history says
+whether it happened. After any rotation, `/api/health` and the worker's `/health` are the two
+URLs that say whether the new values took.

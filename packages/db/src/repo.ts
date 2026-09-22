@@ -95,6 +95,12 @@ export async function listFunnels(db: Db) {
   return db.query.funnels.findMany({ orderBy: [desc(schema.funnels.createdAt)] });
 }
 
+/** How many funnels are saved; the cap on the daily schedule's total work (RUN_LIMITS.maxSavedFunnels). */
+export async function countFunnels(db: Db): Promise<number> {
+  const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.funnels);
+  return row?.n ?? 0;
+}
+
 export async function getFunnel(db: Db, id: string) {
   return db.query.funnels.findFirst({ where: eq(schema.funnels.id, id) });
 }
