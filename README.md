@@ -5,13 +5,118 @@ the exact broken line, produced by driving the funnel in a real headless browser
 every network call. It also reconciles Shopify orders against observed pixel events and
 received postbacks and names the order IDs that went missing.
 
-**Live demo:** _M10_
+**Live demo:** <https://affiliate-tracking-auditor.vercel.app>
 
-> Status: M8 (scheduled runs and alerting) in progress. Sections marked _Mn_ are written when that module lands.
+Sixty seconds with it: paste the demo funnel on the landing page and watch the run; open the
+report and read the score, the failing checks and the waterfall; run it again with a break-it
+switch on and compare; then [`/reconcile`](https://affiliate-tracking-auditor.vercel.app/reconcile)
+for the merchant's view of a day of orders, and
+[`/funnels`](https://affiliate-tracking-auditor.vercel.app/funnels) for the same funnel audited
+daily with one alert when it regresses.
 
 ## Tracking teardown: five ways attribution silently breaks on duplicate funnels
 
-_M5 / M10_
+A duplicate funnel is a chain of handoffs: affiliate network → advertorial on one domain → a
+302 → the store on another domain → checkout → the ad platform, and back to the network. At
+every handoff, identity is carried by convention — a query parameter, a cookie, a cart
+attribute — and nothing enforces it. When one handoff drops it the page still renders, the
+customer still buys, and every dashboard still shows a number. That is what makes these
+failures expensive rather than merely annoying: the first symptom is usually an affiliate
+asking why their conversions fell off a cliff three weeks ago.
+
+Each one below is reproducible here with a switch, and each is what a particular check exists
+to catch.
+
+### 1. The click ID does not survive the redirect
+
+The affiliate sends `?click_id=…` to the advertorial. The redirect that hands the shopper to
+the store rebuilds the URL from a template and forwards the UTMs someone remembered to list,
+but not the network's click ID — or it forwards it once and a later hop nobody thinks about (a
+locale redirect, a trailing-slash canonicaliser, www → apex) eats it.
+
+**Why it is silent:** the UTMs still arrive, so analytics and the store's own reports look
+attributed. The only thing missing is the ID the payout is computed from.
+
+**How it shows here:** the trace records every main-frame hop with its query, so check 3 can
+name the hop where the value stopped, and check 1 then looks for it on every later page — in
+the URL, in cookies, in localStorage, and in what the cart writes. Without the hops, a funnel
+that loses the ID at the last redirect looks exactly like one that never had it.
+Switch: **Drop click ID on redirect**.
+
+**Fix:** forward it on every hop, and persist it into a first-party cookie the moment the
+landing page loads — not at checkout, by which point four redirects have had their chance.
+
+### 2. The UTMs die while the click ID lives
+
+The mirror image, and the one that lasts longer: the network's ID survives — the network
+checks — while `utm_source` and `utm_campaign` are dropped somewhere in the chain.
+
+**Why it is silent:** the affiliate is paid, so nobody complains. The sale simply arrives in
+analytics as `direct / none`, and the campaign that produced it looks unprofitable next to the
+campaigns whose UTMs happen to survive. Budget then moves away from the thing that worked.
+
+**How it shows here:** check 2 compares the UTMs in the landing URL against the attribution
+record that exists at checkout, so a partial loss ("source survived, campaign did not") is
+reported as exactly that. Switch: **Strip UTMs on redirect**.
+
+**Fix:** carry attribution as one record, written once on landing, instead of as loose
+parameters every hop has to remember to re-append.
+
+### 3. The same sale is counted twice
+
+Three routes to it, all ordinary: the pixel fires without an `event_id`; the same container is
+loaded twice because the theme includes it and so does the tag manager; or a "fallback" copy of
+the event is sent alongside the real one.
+
+**Why it is silent:** nothing errors — there is simply more conversion than there was revenue.
+ROAS looks better than it is, which is the direction nobody investigates.
+
+**How it shows here:** check 5 requires `eid` on every standard event, check 7 counts container
+IDs per page and PageViews per document, and check 6 compares the browser Purchase's `eid` with
+what the server sent for the same order. Deduplication only happens when the event name **and**
+the event ID match inside the platform's window, so "we send both browser and server" is not by
+itself protection — it is two records hoping to be recognised as one. Switches: **Strip
+event_id**, **Double-fire the pixel**, **Duplicate GTM container**, **CAPI event_id mismatch**.
+
+**Fix:** derive the ID from the order (`purchase-<orderId>`), so the browser and the server
+compute the same string without having to coordinate.
+
+### 4. The browser reports the sale and the server never does
+
+The pixel fires on the thank-you page, so the ad platform sees the conversion. The affiliate
+network never does: the postback returned a 500 and nothing retried it, or it was fired from a
+page the customer closed before the request finished.
+
+**Why it is silent:** the ad platform's numbers — the dashboard people actually watch — are
+fine. The network's are not, and an unpaid affiliate turns off the traffic rather than filing
+a bug report.
+
+**How it shows here:** check 8 reads every attempt recorded for that order, so "sent once, got
+a 500, never retried" and "never attempted" are different answers instead of one shrug. The
+same join over a whole day of Shopify's own order list is `/reconcile`, which names the order
+IDs that went missing and at which stage. Switch: **Postback returns 500**.
+
+**Fix:** send conversions from the server, keyed on the order, with retries and an attempt log.
+The browser is the wrong place to guarantee delivery.
+
+### 5. The identity is sent, but not in a form the platform can use
+
+Advanced matching sends the customer's email and phone. If they go unhashed, or hashed without
+normalising first (`Buyer@Example.com ` and `buyer@example.com` have different SHA-256s), the
+match fails.
+
+**Why it is silent:** the event is still accepted and still counted; only match quality falls,
+and match quality is a number nobody has a baseline for. Server-side it is worse, and this
+project observed it live: Meta **rejects** a Conversions API event whose `user_data` is not
+hashed, so the server half of the funnel disappears while the browser half keeps reporting.
+
+**How it shows here:** check 9 reports the redactor's verdict — present, hashed, which
+algorithm, and whether the hash matches the normalised value — without ever storing the value.
+In production that sabotaged run also appears in `/reconcile` as `capi_missing`, which is the
+silent failure made visible from the merchant's side. Switch: **Send email unhashed**.
+
+**Fix:** normalise, then hash, at the source (trim, lowercase, E.164), and verify against a
+known hash in a test rather than by eye.
 
 ## Architecture
 
@@ -52,17 +157,17 @@ snippet like a UTM into the `_aff` cookie and the cart attributes, and read by t
 pixel from the cookie (and from M3, by the webhook handler from the order's `note_attributes`).
 Nothing is stored server-side; a run is fully described by its URL.
 
-| Toggle           | What breaks                                                       | Verify by hand                                                                                                                  | Caught by check |
-| ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| `drop_click_id`  | `/go` forwards UTMs but not `click_id`                            | Store URL has no `click_id`; debug panel `click_id` row is `—`; order has no `click_id`                                         | 3, 1            |
-| `strip_utms`     | `/go` drops `utm_*`                                               | Store URL has `click_id` but no `utm_*`                                                                                         | 2               |
-| `strip_event_id` | All pixel events sent without `event_id`                          | DevTools → Network → `facebook.com/tr`: no `eid=` on PageView/ViewContent; console `[meta-checkout]` lines show `eventID: null` | 5, 6            |
-| `double_fire`    | Storefront PageView also sent as the `<noscript>` fallback image  | Two `ev=PageView` requests per store page, one without `eid`                                                                    | 7               |
-| `duplicate_gtm`  | Same GTM container loaded twice on the advertorial                | Two `googletagmanager.com/gtm.js?id=GTM-AUD1T0R…` requests                                                                      | 7               |
-| `unhashed_email` | Checkout pixel sends the email in plaintext as a custom parameter | Purchase request has `cd[email]=…` in clear                                                                                     | 9               |
-| `consent_wall`   | Advertorial shows a consent bar; pixel does not load until Accept | No `facebook.com/tr` request on the advertorial until you click Accept                                                          | 10              |
-| `capi_mismatch`  | Server-side Purchase uses a random `event_id`                     | _from M3_                                                                                                                       | 6               |
-| `postback_500`   | Postback receiver answers 500                                     | _from M3_                                                                                                                       | 8               |
+| Toggle           | What breaks                                                       | Verify by hand                                                                                                                                    | Caught by check |
+| ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `drop_click_id`  | `/go` forwards UTMs but not `click_id`                            | Store URL has no `click_id`; debug panel `click_id` row is `—`; order has no `click_id`                                                           | 3, 1            |
+| `strip_utms`     | `/go` drops `utm_*`                                               | Store URL has `click_id` but no `utm_*`                                                                                                           | 2               |
+| `strip_event_id` | All pixel events sent without `event_id`                          | DevTools → Network → `facebook.com/tr`: no `eid=` on PageView/ViewContent; console `[meta-checkout]` lines show `eventID: null`                   | 5, 6            |
+| `double_fire`    | Storefront PageView also sent as the `<noscript>` fallback image  | Two `ev=PageView` requests per store page, one without `eid`                                                                                      | 7               |
+| `duplicate_gtm`  | Same GTM container loaded twice on the advertorial                | Two `googletagmanager.com/gtm.js?id=GTM-AUD1T0R…` requests                                                                                        | 7               |
+| `unhashed_email` | Checkout pixel sends the email in plaintext as a custom parameter | Purchase request has `cd[email]=…` in clear                                                                                                       | 9               |
+| `consent_wall`   | Advertorial shows a consent bar; pixel does not load until Accept | No `facebook.com/tr` request on the advertorial until you click Accept                                                                            | 10              |
+| `capi_mismatch`  | Server-side Purchase uses a random `event_id`                     | `conversion_attempts` row for the order has an `event_id` that is not `purchase-<orderId>`; Events Manager shows the server event un-deduplicated | 6               |
+| `postback_500`   | Postback receiver answers 500                                     | three `conversion_attempts` rows of kind `postback` for the order, all `status_code` 500; no `postback_events` row                                | 8               |
 
 ## Postbacks, webhooks and the conversion sender
 
@@ -148,6 +253,24 @@ Reports are computed when a run is read, not stored: the server rows arrive seco
 the run ends, and a report frozen at completion would stay inconclusive about events that
 exist. The tests run the engine over real traces of the demo funnel, one per break-it toggle.
 
+### On a funnel that is not ours
+
+The demo funnel is the one case where everything can be decided. A stranger's funnel is the
+case that matters, so the tool was smoke-tested against a live DTC supplement storefront
+nobody here controls, entered as an affiliate link would enter it.
+
+It returned **4 pass, 1 fail, 5 undecided**. The five undecided are undecided by construction:
+no purchase is ever completed off the demo store, so the CAPI and postback checks have nothing
+to compare, and the run stopped at the product page — their variant picker needs a selection
+the driver does not make — so the click-ID and UTM checks stop short of a cart. The single
+failure was real and specific: `fbevents.js` was present on the collection page and not on the
+product page, so `ViewContent` never fired. That is an ordinary, expensive defect — it is the
+event catalogue retargeting is built on.
+
+That run is also how the driver learned to follow a call to action whose click Playwright
+cannot land (a sticky header over the button): it now falls back to the anchor's href, because
+what the checks care about is the page the shopper reaches, not the input method.
+
 ## The report
 
 `/` is one field and one button, plus the demo funnel with its break-it switches on the same
@@ -179,7 +302,9 @@ run from such a network sees a pixel that never fires. That is a fact about the 
 egress, not the funnel, so check 4 reports it as _undecided_ with that exact reason — the base
 code was requested on every page, the script was not served — and the worker's `/health`
 carries a `meta_cdn` probe (a real Chromium load at boot) so the condition is visible before
-anyone reads a report. First observed 2026-09-21, from two networks at once.
+anyone reads a report. First observed 2026-09-21, from two networks at once; the probe reported
+the script loading normally again on 2026-09-22. The handling stays, because it is the general
+answer to "the auditor could not see this", not a workaround for one outage.
 
 ## Reconciliation
 
@@ -332,9 +457,62 @@ when `NODE_ENV=production`.
 
 ## Production readiness
 
-_M10_. Production grade here means correct, recoverable and observable. It does not mean built
-for scale, and no scale infrastructure was added; the reasoning is stated when this section is
-written.
+Production grade here means correct, recoverable and observable. It does not mean built for
+scale, and no scale infrastructure was added — for a tool whose throughput is two concurrent
+browsers, that would be decoration. What exists, and why:
+
+**Correct at the boundaries.**
+
+- Every inbound webhook and postback is verified before it is believed: HMAC over the **raw**
+  body (parse after verifying, never before), a constant-time compare, and a unique index on
+  the sender's own event ID so a replay is a no-op rather than a second conversion
+  (`app/api/postback`, `app/api/webhooks/shopify/orders-create`).
+- Idempotency at three layers, because each covers a different failure: the submission key (a
+  double-clicked form is one run), BullMQ's `jobId` (a re-enqueue is refused), and unique
+  indexes on `postback_id`, Shopify's `event_id`, `funnel_scores.run_id` and
+  `(funnel_id, run_id)` for alerts. Every one of them decides the race in the database, never
+  from a prior `SELECT`.
+- Every boundary is parsed with zod — form → API, API → queue, worker → database. A trace the
+  check engine could not read fails in the worker, loudly, instead of becoming a bad report.
+
+**Recoverable.**
+
+- Runs retry three times with exponential backoff and then land in a dead-letter queue with
+  their reason. A timeout is terminal on purpose: retrying a 90-second browser run that may
+  already have placed an order is worse than failing it.
+- The schema is append-only apart from a single `UPDATE`, which records an alert's delivery
+  outcome — and only after the alert row has been claimed, because that unique index is what
+  makes "exactly one alert per regression" true under retries.
+- Migrations are committed SQL (`drizzle-kit generate`), applied as an explicit step, never
+  `push`. Nothing runs migrations at boot.
+- Conversions are sent server-side with one row per attempt, so a failure is a record instead
+  of a gap — which is what lets check 8 distinguish "tried and was refused" from "never tried".
+
+**Observable.**
+
+- Structured JSON lines carrying `service`, `version` and `run_id`, with timed spans for each
+  run; the run's own event log is append-only and is shown on the report.
+- `/api/health` and the worker's `/health` report database, Redis, browser, queue depth and the
+  deployed commit. The commit is not decoration: it is how a version skew between the web app
+  and the worker becomes visible at all. The worker's health also probes Meta's CDN, because an
+  outage there changes what the checks can honestly conclude.
+
+**Guarded.** SSRF in three layers plus the egress proxy that every connection passes through,
+a per-IP rate limit, a global queue cap, a cap on saved funnels, a 90-second hard timeout, PII
+redacted at capture and held to it by an invariant test, secrets scanned pre-commit and in CI
+with a documented rotation procedure. The two sections above say how each works.
+
+**Deliberately not built:**
+
+| Not built                            | Why                                                                                                                                                                                                                                       |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accounts and auth                    | The tool has to be usable by a stranger with a URL (§4). The cost is that every guard has to hold for anonymous traffic — which is why the caps exist and why they are tested.                                                            |
+| Multi-tenancy                        | There is one tenant. Ownership columns and an authorisation surface would be real complexity protecting nothing.                                                                                                                          |
+| Autoscaling, sharding, read replicas | The workload is two browsers at a time. The queue is the throttle and a 503 at the cap is the honest answer to overload; a bigger cluster would only fail later and more expensively.                                                     |
+| A caching layer                      | Reports are computed on read — the server-side rows arrive seconds after the browser finishes, so a report frozen at completion would be permanently undecided about events that exist. Computing takes milliseconds over a stored trace. |
+| APM, distributed tracing, dashboards | The only question this system is ever asked is "what happened to this run", and the event log, the trace and two health endpoints answer it.                                                                                              |
+| A client-side app                    | Forms are plain HTML posts and pages are server-rendered, so the tool works with JavaScript disabled. The only client components are the status poller, the copy-link button and the break-it panel.                                      |
+| Deleting or editing history          | Runs, events, orders and alerts are facts about the past. Only expired traces are deleted, by the TTL job.                                                                                                                                |
 
 ## Local setup
 

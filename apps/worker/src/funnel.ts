@@ -107,9 +107,21 @@ export async function driveFunnel(entryUrl: string, deps: FunnelDeps): Promise<F
     await Promise.all([
       page.waitForURL((u) => u.href !== before, { timeout: STEP_TIMEOUT_MS, waitUntil: 'load' }),
       page.locator('a[href]').nth(pick.index).click({ timeout: 5_000 }),
-    ]).catch((err: unknown) => {
+    ]).catch(async (err: unknown) => {
       if (collector.blocked) throw new StopRun('cta', `blocked: ${collector.blocked}`);
-      throw new StopRun('cta', `following the CTA failed: ${message(err)}`);
+      // A real landing page routinely makes its own CTA unclickable: a sticky header or a
+      // consent bar covers it, or the anchor opens in a new tab so the current page never
+      // navigates. A shopper still arrives at the href, and the href is what the checks are
+      // about — so follow it directly rather than ending the run over an input-method detail.
+      // (Found by the first third-party smoke test: `locator.click` timed out on a page whose
+      // CTA leads to the product page perfectly well.)
+      const target = absoluteHttpUrl(pick.href, before);
+      if (!target) throw new StopRun('cta', `following the CTA failed: ${message(err)}`);
+      log.info('cta click failed, following its href instead', { reason: message(err) });
+      await page.goto(target, { waitUntil: 'load', timeout: STEP_TIMEOUT_MS }).catch(() => {
+        throw new StopRun('cta', `following the CTA failed: ${message(err)}`);
+      });
+      if (page.url() === before) throw new StopRun('cta', 'the CTA led back to the same page');
     });
     await settle(page);
 
@@ -258,12 +270,30 @@ async function followLink(page: Page, link: Locator, urlPattern: RegExp): Promis
       link.click({ timeout: 3_000 }),
     ]);
   } catch (err) {
-    if (!href) throw err;
-    await page.goto(new URL(href, page.url()).toString(), {
-      waitUntil: 'load',
-      timeout: STEP_TIMEOUT_MS,
-    });
+    const target = href ? absoluteHttpUrl(href, page.url()) : null;
+    if (!target) throw err;
+    await page.goto(target, { waitUntil: 'load', timeout: STEP_TIMEOUT_MS });
     if (!urlPattern.test(page.url())) throw err;
+  }
+}
+
+/**
+ * `href` resolved against the page as an absolute http(s) URL, or null when it is not somewhere
+ * a navigation can actually go: `javascript:void(0)`, `mailto:`, `tel:`, or a bare `#anchor`
+ * into the same document — all common on the button a landing page calls its call to action.
+ * A fragment is the subtle one: it resolves to a perfectly valid http URL, and navigating to
+ * it would change `page.url()` without changing the page, which would read as progress.
+ */
+export function absoluteHttpUrl(href: string, base: string): string | null {
+  try {
+    const url = new URL(href, base);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    const here = new URL(base);
+    if (url.origin === here.origin && url.pathname === here.pathname && url.search === here.search)
+      return null;
+    return url.toString();
+  } catch {
+    return null;
   }
 }
 
