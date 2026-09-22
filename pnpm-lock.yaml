@@ -236,6 +236,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@auditor/checks':
+        specifier: workspace:*
+        version: link:../../packages/checks
       '@auditor/db':
         specifier: workspace:*
         version: link:../../packages/db

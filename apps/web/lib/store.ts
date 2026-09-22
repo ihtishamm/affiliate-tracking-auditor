@@ -1,4 +1,4 @@
-import { desc, eq, schema, type Db } from '@auditor/db';
+import { desc, eq, repo, schema, type Db } from '@auditor/db';
 import type { PostbackPayload, RunStatus, RunTrace } from '@auditor/shared';
 import type { ConversionAttempt } from './conversion-sender.ts';
 import type { WebhookRow } from './shopify-webhook.ts';
@@ -66,39 +66,23 @@ export function recordConversionAttempt(db: Db) {
 
 // ---- M4: runs --------------------------------------------------------------------------------
 
-/** Returns the run id and whether this call created it. A repeat of the key wins nothing and reads the earlier row. */
 export function insertRun(db: Db) {
-  return async (run: {
+  return (run: {
     idempotencyKey: string;
     url: string;
     urlHost: string;
     clickIdParam: string;
-  }): Promise<{ id: string; created: boolean }> => {
-    const rows = await db
-      .insert(schema.runs)
-      .values(run)
-      .onConflictDoNothing({ target: schema.runs.idempotencyKey })
-      .returning({ id: schema.runs.id });
-    const won = rows[0];
-    if (won) return { id: won.id, created: true };
-    const existing = await db.query.runs.findFirst({
-      where: eq(schema.runs.idempotencyKey, run.idempotencyKey),
-      columns: { id: true },
-    });
-    if (!existing) throw new Error('run insert lost the race but the winner is not visible');
-    return { id: existing.id, created: false };
-  };
+    funnelId?: string | null;
+  }): Promise<{ id: string; created: boolean }> => repo.insertRun(db, run);
 }
 
 export function appendRunEvent(db: Db) {
-  return async (
+  return (
     runId: string,
     status: RunStatus,
     detail: Record<string, unknown>,
     attempt = 0,
-  ): Promise<void> => {
-    await db.insert(schema.runEvents).values({ runId, status, attempt, detail });
-  };
+  ): Promise<void> => repo.appendRunEvent(db, runId, status, attempt, detail);
 }
 
 export interface RunView {
@@ -106,6 +90,7 @@ export interface RunView {
   url: string;
   urlHost: string;
   clickIdParam: string;
+  funnelId: string | null;
   createdAt: Date;
   status: RunStatus;
   events: Array<{ status: RunStatus; attempt: number; detail: Record<string, unknown>; at: Date }>;
@@ -135,6 +120,7 @@ export async function getRun(
     url: run.url,
     urlHost: run.urlHost,
     clickIdParam: run.clickIdParam,
+    funnelId: run.funnelId,
     createdAt: run.createdAt,
     status: (latest?.status as RunStatus | undefined) ?? 'queued',
     events: events.map((e) => ({

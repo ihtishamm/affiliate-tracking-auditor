@@ -67,7 +67,27 @@ export const runJobSchema = z.object({
   clickIdParam: z.string(),
   /** The one host where the runner may complete a purchase (our dev store). Anywhere else, it stops at checkout. */
   purchaseHost: z.string().nullable(),
+  /** M8: the saved funnel this run belongs to; its report is scored and compared when it finishes. */
+  funnelId: z.uuid().optional(),
 });
+
+export const SCHEDULE_QUEUE_NAME = 'schedule';
+export const SCORING_QUEUE_NAME = 'scoring';
+
+/** BullMQ options every run job gets, whoever enqueues it (web submission or the daily scheduler). */
+export const RUN_JOB_OPTIONS = {
+  attempts: RUN_LIMITS.attempts,
+  backoff: { type: 'exponential', delay: RUN_LIMITS.backoffMs },
+  removeOnComplete: { count: 200 },
+  removeOnFail: { count: 500 },
+} as const;
+/** Daily at 06:00 UTC: after the previous day's orders have settled, before anyone's workday. */
+export const DAILY_CRON = '0 6 * * *';
+
+/** Deterministic key for one funnel's run on one day: a duplicate tick or a redeploy cannot double-run it. */
+export function dailyRunKey(funnelId: string, date: Date): string {
+  return `daily:${funnelId}:${date.toISOString().slice(0, 10)}`;
+}
 export type RunJob = z.infer<typeof runJobSchema>;
 
 // ---- trace -----------------------------------------------------------------------------------

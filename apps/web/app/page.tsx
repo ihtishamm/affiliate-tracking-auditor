@@ -113,6 +113,10 @@ export default async function HomePage() {
           Reconciliation: orders vs pixel vs CAPI vs postbacks
         </Link>
         {' · '}
+        <Link className="underline" href="/funnels">
+          Saved funnels &amp; daily audits
+        </Link>
+        {' · '}
         <a className="underline" href="https://github.com/ihtishamm/affiliate-tracking-auditor">
           Source
         </a>

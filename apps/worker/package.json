@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@auditor/checks": "workspace:*",
     "@auditor/db": "workspace:*",
     "@auditor/shared": "workspace:*",
     "bullmq": "6.3.8",

@@ -26,6 +26,8 @@ import { executeRun } from './runner.ts';
 
 export interface QueueDeps {
   connection: Redis;
+  /** M8: called when a saved funnel's run has a stored trace, so it can be scored. */
+  onFunnelRunFinished?: (funnelId: string, runId: string) => Promise<void>;
   browser: Browser;
   ssrf: SsrfOptions;
   proxy: EgressProxy;
@@ -87,6 +89,15 @@ export function startQueueWorker(deps: QueueDeps): {
         status: result.status,
         reached: result.trace.outcome.reachedStep,
       });
+      // The run is done and its trace is stored; nothing after this line may fail the job,
+      // or BullMQ would retry a finished run with a browser (and, on the demo store, a purchase).
+      if (data.funnelId && deps.onFunnelRunFinished) {
+        await deps
+          .onFunnelRunFinished(data.funnelId, data.runId)
+          .catch((err: unknown) =>
+            log.error('could not queue scoring for the finished run', { err }),
+          );
+      }
     },
     {
       connection: deps.connection,

@@ -43,8 +43,13 @@ export type { SsrfOptions, SsrfVerdict } from './ssrf.ts';
 export { classifyParam, redactBody, redactParams, redactQuery, redactUrl } from './redact.ts';
 export type { BodyKind, KnownIdentity, ParamMap, ParamValue, RedactedBody } from './redact.ts';
 export {
+  DAILY_CRON,
   DLQ_NAME,
   FUNNEL_STEPS,
+  RUN_JOB_OPTIONS,
+  SCHEDULE_QUEUE_NAME,
+  SCORING_QUEUE_NAME,
+  dailyRunKey,
   QUEUE_NAME,
   RUN_LIMITS,
   RUN_STATUSES,

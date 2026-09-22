@@ -126,8 +126,14 @@ export async function checkTargetUrl(input: string, opts: SsrfOptions = {}): Pro
 }
 
 async function systemResolve(hostname: string): Promise<string[]> {
-  const results = await lookup(hostname, { all: true, verbatim: true });
-  return results.map((r) => r.address);
+  try {
+    return (await lookup(hostname, { all: true, verbatim: true })).map((r) => r.address);
+  } catch (err) {
+    // A resolver hiccup is not a verdict about the host: one retry before it becomes one.
+    if (!/EAI_AGAIN|ETIMEOUT|ECONNREFUSED/.test(errorCode(err))) throw err;
+    await new Promise((r) => setTimeout(r, 500));
+    return (await lookup(hostname, { all: true, verbatim: true })).map((r) => r.address);
+  }
 }
 
 function errorCode(err: unknown): string {

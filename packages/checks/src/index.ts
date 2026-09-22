@@ -51,11 +51,19 @@ export function runChecks(input: CheckInput): CheckReport {
   return { results, ...summarise(results) };
 }
 
+/**
+ * Fewer decided checks than this and there is no score: a run that never got past the
+ * landing page decides two or three checks, all of which may pass, and 3/3 = 100% would put
+ * a network outage into the trend as a perfect day — and make it the baseline the next run
+ * is judged against.
+ */
+export const MIN_DECIDED_FOR_SCORE = 3;
+
 export function summarise(results: CheckResult[]): Pick<CheckReport, 'counts' | 'score'> {
   const counts = { pass: 0, fail: 0, inconclusive: 0 };
   for (const r of results) counts[r.status]++;
   const decided = counts.pass + counts.fail;
-  return { counts, score: decided === 0 ? null : counts.pass / decided };
+  return { counts, score: decided < MIN_DECIDED_FOR_SCORE ? null : counts.pass / decided };
 }
 
 export { CheckContext } from './context.ts';
@@ -77,3 +85,5 @@ export type {
   ReconcileSources,
   Reconciliation,
 } from './reconcile.ts';
+export { DEFAULT_DROP_THRESHOLD, evaluateAlert, snapshotOf } from './alerts.ts';
+export type { AlertVerdict, ScoreSnapshot } from './alerts.ts';

@@ -107,6 +107,8 @@ export const runs = pgTable(
     url: text('url').notNull(),
     urlHost: text('url_host').notNull(),
     clickIdParam: text('click_id_param').notNull(),
+    /** M8: set when the run was made for a saved funnel (scheduled or "run now"). */
+    funnelId: uuid('funnel_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex('runs_idempotency_key_idx').on(t.idempotencyKey)],
@@ -151,4 +153,71 @@ export const runTraces = pgTable(
     uniqueIndex('run_traces_run_id_idx').on(t.runId),
     index('run_traces_expires_at_idx').on(t.expiresAt),
   ],
+);
+
+// ---- M8: saved funnels, score history, alerts ----------------------------------------------------
+
+/** A funnel someone asked to be audited daily. Immutable; deleting is out of scope (append-only). */
+export const funnels = pgTable('funnels', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  url: text('url').notNull(),
+  urlHost: text('url_host').notNull(),
+  clickIdParam: text('click_id_param').notNull(),
+  label: text('label').notNull(),
+  /** The one host where a run of this funnel may complete a purchase; null = observe only. */
+  purchaseHost: text('purchase_host'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * One row per scored run of a saved funnel: the report frozen at scoring time. The live report
+ * page still computes on read; history needs values that do not change under it.
+ */
+export const funnelScores = pgTable(
+  'funnel_scores',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    funnelId: uuid('funnel_id')
+      .notNull()
+      .references(() => funnels.id),
+    runId: uuid('run_id')
+      .notNull()
+      .references(() => runs.id),
+    /** 0–1, or null when nothing was decidable. */
+    score: numeric('score', { precision: 5, scale: 4 }),
+    /** check id → 'pass' | 'fail' | 'inconclusive' */
+    statuses: jsonb('statuses').$type<Record<string, string>>().notNull(),
+    counts: jsonb('counts').$type<{ pass: number; fail: number; inconclusive: number }>().notNull(),
+    scoredAt: timestamp('scored_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('funnel_scores_run_id_idx').on(t.runId),
+    index('funnel_scores_funnel_id_idx').on(t.funnelId, t.scoredAt),
+  ],
+);
+
+/**
+ * Exactly one alert per (funnel, run): the unique index is what makes "exactly one" true even
+ * if scoring is retried. The webhook is sent only by the insert that wins.
+ */
+export const alerts = pgTable(
+  'alerts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    funnelId: uuid('funnel_id')
+      .notNull()
+      .references(() => funnels.id),
+    runId: uuid('run_id')
+      .notNull()
+      .references(() => runs.id),
+    previousScore: numeric('previous_score', { precision: 5, scale: 4 }),
+    score: numeric('score', { precision: 5, scale: 4 }),
+    /** Why it fired: score drop and/or the checks that flipped pass → fail. */
+    reasons: jsonb('reasons').$type<string[]>().notNull(),
+    /** HTTP status of the webhook delivery, or null when no webhook is configured. */
+    deliveryStatus: integer('delivery_status'),
+    deliveryError: text('delivery_error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('alerts_funnel_run_idx').on(t.funnelId, t.runId)],
 );

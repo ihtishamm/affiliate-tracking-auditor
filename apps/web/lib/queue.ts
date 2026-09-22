@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { QUEUE_NAME, RUN_LIMITS, type RunJob } from '@auditor/shared';
+import { QUEUE_NAME, RUN_JOB_OPTIONS, type RunJob } from '@auditor/shared';
 import { getRedis } from '@/lib/redis.ts';
 
 let queue: Queue<RunJob> | undefined;
@@ -7,16 +7,9 @@ let queue: Queue<RunJob> | undefined;
 function getQueue(): Queue<RunJob> {
   queue ??= new Queue<RunJob>(QUEUE_NAME, {
     connection: getRedis(),
-    defaultJobOptions: {
-      // Exponential backoff, max 3 attempts (§5). The worker marks timeouts and blocked URLs
-      // unrecoverable so they do not burn the remaining attempts.
-      attempts: RUN_LIMITS.attempts,
-      backoff: { type: 'exponential', delay: RUN_LIMITS.backoffMs },
-      removeOnComplete: { count: 200 },
-      // Failed jobs stay: they are also copied to the DLQ by the worker, but a failed set
-      // that can be inspected in Redis costs nothing.
-      removeOnFail: { count: 500 },
-    },
+    // Same options the daily scheduler uses (packages/shared/src/run.ts): 3 attempts with
+    // exponential backoff; timeouts and blocked URLs are made unrecoverable by the worker.
+    defaultJobOptions: RUN_JOB_OPTIONS,
   });
   return queue;
 }

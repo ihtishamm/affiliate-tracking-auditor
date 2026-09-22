@@ -6,6 +6,8 @@ import { startTraceCleanup } from './cleanup.ts';
 import { startEgressProxy } from './egress-proxy.ts';
 import { startHealthServer, withTimeout, type ProbeResult } from './health.ts';
 import { startQueueWorker } from './queue.ts';
+import { startScheduler } from './schedule.ts';
+import { enqueueScoring, startScoringWorker } from './scoring.ts';
 import { appendRunEvent, deleteExpiredTraces, insertTrace } from './store.ts';
 
 // Chromium flags for running inside a container. /dev/shm is tiny in Docker by default and
@@ -76,9 +78,27 @@ async function main(): Promise<void> {
     },
   });
 
+  // M8: scoring of saved funnels' runs, and the daily schedule that creates those runs.
+  const scoring = startScoringWorker(queueRedis, {
+    db,
+    log,
+    sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+    webhook: env.ALERT_WEBHOOK_URL
+      ? {
+          url: env.ALERT_WEBHOOK_URL,
+          secret: env.ALERT_WEBHOOK_SECRET,
+          fetch,
+          publicWebUrl: env.PUBLIC_WEB_URL,
+        }
+      : null,
+  });
+  const scheduler = await startScheduler({ connection: queueRedis, db, log });
+
   const queue = browser
     ? startQueueWorker({
         connection: queueRedis,
+        onFunnelRunFinished: (funnelId, runId) =>
+          enqueueScoring(scoring.queue, { funnelId, runId }),
         browser,
         ssrf,
         proxy,
@@ -106,7 +126,13 @@ async function main(): Promise<void> {
     cleanup.stop();
     health.closeAllConnections();
     health.close();
-    void Promise.all([queue?.worker.close(), queue?.dlq.close()])
+    void Promise.all([
+      queue?.worker.close(),
+      queue?.dlq.close(),
+      scoring.worker.close(),
+      scoring.queue.close(),
+      scheduler.close(),
+    ])
       .then(() => browser?.close())
       .then(() => proxy.close())
       .finally(() => {

@@ -15,6 +15,13 @@
       "when": 1789855926934,
       "tag": "0001_fearless_callisto",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789961364951,
+      "tag": "0002_safe_iron_man",
+      "breakpoints": true
     }
   ]
 }

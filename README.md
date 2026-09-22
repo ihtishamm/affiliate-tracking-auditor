@@ -7,7 +7,7 @@ received postbacks and names the order IDs that went missing.
 
 **Live demo:** _M10_
 
-> Status: M7 (reconciliation) in progress. Sections marked _Mn_ are written when that module lands.
+> Status: M8 (scheduled runs and alerting) in progress. Sections marked _Mn_ are written when that module lands.
 
 ## Tracking teardown: five ways attribution silently breaks on duplicate funnels
 
@@ -203,6 +203,31 @@ before the next page, rather than hitting the 429; a 429 is honoured via `Retry-
 
 Needs `SHOPIFY_ADMIN_TOKEN` (a custom app with the `read_orders` scope only); without it the
 page says so.
+
+## Saved funnels, daily runs, one alert
+
+Any finished report can be **saved for daily audits**. The worker registers one BullMQ job
+scheduler (`0 6 * * *` UTC); its tick submits one run per saved funnel with the key
+`daily:<funnel>:<date>` — `runs.idempotency_key` is unique, so a second tick, a redeploy or a
+second worker reads the existing run and enqueues nothing. When a saved funnel's run finishes,
+a delayed **scoring job** (its own queue, so a 90-second wait for the order's webhook rows
+cannot stall the run job) computes the report, appends it to `funnel_scores` (unique per run),
+and compares it with the previous score:
+
+- **fires** when the score dropped by ≥ 20 points, or any check went pass → fail;
+- **does not fire** on the first run (no baseline), on inconclusive → fail (missing evidence
+  is not a regression), or on a fail that stays a fail.
+
+"Exactly one alert" is a database fact, not a code path: the `alerts` row is claimed under a
+unique `(funnel, run)` index before the webhook is sent, so only the process that won the
+insert sends it. The webhook is one JSON POST, one attempt, five seconds
+(`ALERT_WEBHOOK_URL`; optionally signed with `ALERT_WEBHOOK_SECRET`); the body carries
+`content` and `text` so a Discord or Slack incoming webhook renders the summary line as-is.
+Delivery status is written back onto the alert row — the single UPDATE in the schema.
+
+`/funnels/<id>` shows the score trend (inline SVG), a check-by-run grid, the alerts, and
+**Run now** — optionally with a break-it toggle applied to that run only, which is how "the
+funnel broke today" is demonstrated without editing the store.
 
 ## PII handling
 

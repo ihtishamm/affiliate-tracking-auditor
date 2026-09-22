@@ -46,7 +46,25 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
         <Link href="/" className="text-sm text-neutral-500 hover:underline">
           ← Audit another funnel
         </Link>
-        <CopyLink />
+        <div className="flex items-center gap-2">
+          {terminal && run.trace && !run.funnelId && (
+            <form method="post" action="/api/funnels">
+              <input type="hidden" name="run_id" value={run.id} />
+              <button
+                type="submit"
+                className="rounded border border-neutral-300 px-3 py-1 text-sm hover:bg-neutral-50"
+              >
+                Save for daily audits
+              </button>
+            </form>
+          )}
+          {run.funnelId && (
+            <Link href={`/funnels/${run.funnelId}`} className="text-sm underline">
+              Saved funnel: history
+            </Link>
+          )}
+          <CopyLink />
+        </div>
       </div>
       <p className="mt-4 break-all text-sm text-neutral-500">{run.url}</p>
 

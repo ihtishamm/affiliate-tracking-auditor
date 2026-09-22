@@ -292,7 +292,7 @@ describe('the engine itself', () => {
     );
   });
 
-  it('score excludes inconclusive checks and is null when nothing was decided', () => {
+  it('score excludes inconclusive checks, and needs at least 3 decided checks to exist at all', () => {
     const mk = (status: CheckResult['status']): CheckResult => ({
       id: 'pii_hashing',
       number: 9,
@@ -307,5 +307,9 @@ describe('the engine itself', () => {
       2 / 3,
     );
     expect(summarise([mk('inconclusive')]).score).toBeNull();
+    // A run that only reached the landing page: two passes, nothing failed — not a 100% day.
+    expect(
+      summarise([mk('pass'), mk('pass'), mk('inconclusive'), mk('inconclusive')]).score,
+    ).toBeNull();
   });
 });

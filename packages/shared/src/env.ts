@@ -69,6 +69,13 @@ export const workerEnv = baseEnv
     // M4, optional: a development store's password page cannot be removed; the runner types
     // this when — and only when — it meets that page on the job's `purchaseHost`.
     SHOPIFY_STOREFRONT_PASSWORD: z.string().optional(),
+    // M8, optional: where the one alert per regression is POSTed (any JSON receiver; Slack and
+    // Discord incoming webhooks work because the body carries `text` and `content` too).
+    ALERT_WEBHOOK_URL: z.url({ protocol: /^https?$/ }).optional(),
+    // M8, optional: when set, alerts carry `x-auditor-signature` (hex HMAC-SHA256 of the body).
+    ALERT_WEBHOOK_SECRET: z.string().min(16).optional(),
+    // M8, optional: the web app's public origin, for the report link inside an alert.
+    PUBLIC_WEB_URL: z.url({ protocol: /^https?$/ }).optional(),
     // The health server's port. WORKER_PORT exists so a developer can move the worker in the
     // shared local .env without moving Next (which also honours PORT); Railway injects PORT.
     WORKER_PORT: z.coerce.number().int().positive().optional(),
