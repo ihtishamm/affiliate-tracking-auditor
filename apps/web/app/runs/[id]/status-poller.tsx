@@ -65,12 +65,12 @@ export function StatusPoller({ runId, startedAt }: Props) {
   const steps = stepProgress(furthest ?? null, false);
 
   return (
-    <section className="mt-6 rounded border border-neutral-200 p-4" aria-live="polite">
+    <section className="card mt-6 p-4" aria-live="polite">
       <p className="font-semibold">
         {status === 'queued'
           ? 'Queued — a browser is about to start'
           : 'Running — a browser is walking the funnel'}
-        <span className="ml-2 font-normal text-neutral-500">{elapsed}s</span>
+        <span className="text-muted-foreground ml-2 font-normal">{elapsed}s</span>
       </p>
       <ol className="mt-3 flex flex-wrap gap-2 text-sm">
         {steps.map((s) => (
@@ -78,17 +78,17 @@ export function StatusPoller({ runId, startedAt }: Props) {
             key={s.step}
             className={
               s.state === 'done'
-                ? 'rounded bg-green-100 px-2 py-1 text-green-900'
+                ? 'pill pill-pass px-2 py-1 text-sm'
                 : s.state === 'current'
-                  ? 'rounded bg-neutral-900 px-2 py-1 text-white'
-                  : 'rounded bg-neutral-100 px-2 py-1 text-neutral-500'
+                  ? 'pill bg-primary text-primary-foreground animate-pulse px-2 py-1 text-sm'
+                  : 'pill pill-undecided px-2 py-1 text-sm font-normal'
             }
           >
             {s.label}
           </li>
         ))}
       </ol>
-      <p className="mt-3 text-xs text-neutral-500">
+      <p className="text-muted-foreground mt-3 text-xs">
         Usually 30–90 seconds. This page updates itself; the link is stable if you want to come
         back.
       </p>

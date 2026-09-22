@@ -43,17 +43,14 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <Link href="/" className="text-sm text-neutral-500 hover:underline">
+        <Link href="/" className="text-sm text-muted-foreground hover:underline">
           ← Audit another funnel
         </Link>
         <div className="flex items-center gap-2">
           {terminal && run.trace && !run.funnelId && (
             <form method="post" action="/api/funnels">
               <input type="hidden" name="run_id" value={run.id} />
-              <button
-                type="submit"
-                className="rounded border border-neutral-300 px-3 py-1 text-sm hover:bg-neutral-50"
-              >
+              <button type="submit" className="btn btn-muted px-3 py-1 text-sm">
                 Save for daily audits
               </button>
             </form>
@@ -66,16 +63,16 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
           <CopyLink />
         </div>
       </div>
-      <p className="mt-4 break-all text-sm text-neutral-500">{run.url}</p>
+      <p className="text-muted-foreground mt-4 font-mono text-sm break-all">{run.url}</p>
 
       {!terminal && <StatusPoller runId={run.id} startedAt={run.createdAt.toISOString()} />}
 
       {terminal && !report && (
-        <section className="mt-6 rounded border border-red-300 bg-red-50 p-4">
-          <h1 className="text-xl font-semibold text-red-900">
+        <section className="card border-destructive bg-destructive/10 mt-6 border-2 p-5">
+          <h1 className="font-serif text-xl font-semibold">
             The run {run.status === 'timed_out' ? 'timed out' : 'failed'} before producing a trace
           </h1>
-          <p className="mt-2 text-sm text-red-900">
+          <p className="mt-2 text-sm">
             {String(
               lastEvent?.detail['error'] ??
                 lastEvent?.detail['reason'] ??
@@ -89,17 +86,17 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
         <>
           <header className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-3">
             <div>
-              <div className="text-6xl font-semibold tabular-nums tracking-tight">
+              <div className="font-serif text-6xl font-semibold tabular-nums tracking-tight">
                 {scoreLabel(report)}
               </div>
-              <div className="mt-1 text-sm text-neutral-500">
+              <div className="mt-1 text-sm text-muted-foreground">
                 {report.counts.pass} pass · {report.counts.fail} fail · {report.counts.inconclusive}{' '}
                 undecided
               </div>
             </div>
             <div className="max-w-md">
-              <h1 className="text-xl font-semibold">{headline(report, trace)}</h1>
-              <p className="mt-1 text-sm text-neutral-600">
+              <h1 className="font-serif text-2xl font-semibold">{headline(report, trace)}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
                 {trace.mode === 'purchase'
                   ? `A test purchase was completed on the demo store (order ${trace.order?.id ?? '—'}).`
                   : `The run stopped at ${trace.outcome.reachedStep.replace('_', '-')}: ${trace.outcome.stopReason}.`}
@@ -108,9 +105,9 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
               </p>
               {active.length > 0 && (
                 <p className="mt-2 text-sm">
-                  <span className="text-neutral-500">Sabotaged with: </span>
+                  <span className="text-muted-foreground">Sabotaged with: </span>
                   {active.map((t) => (
-                    <span key={t} className="mr-1 rounded bg-red-100 px-2 py-0.5 text-red-900">
+                    <span key={t} className="pill pill-accent mr-1">
                       {BREAK_TOGGLE_INFO[t].label}
                     </span>
                   ))}
@@ -125,10 +122,10 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
                 key={s.step}
                 className={
                   s.state === 'done'
-                    ? 'rounded bg-green-100 px-2 py-1 text-green-900'
+                    ? 'pill pill-pass px-2 py-1 text-sm'
                     : s.state === 'stopped'
-                      ? 'rounded bg-amber-100 px-2 py-1 text-amber-900'
-                      : 'rounded bg-neutral-100 px-2 py-1 text-neutral-400'
+                      ? 'pill pill-accent px-2 py-1 text-sm'
+                      : 'pill pill-undecided px-2 py-1 text-sm font-normal'
                 }
               >
                 {s.label}
@@ -137,15 +134,13 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
           </ol>
 
           {first && (
-            <section className="mt-6 rounded border-2 border-red-600 p-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-red-700">
-                Fix this first
-              </h2>
+            <section className="card border-destructive bg-destructive/10 mt-6 border-2 p-5 shadow-md">
+              <h2 className="pill pill-fail tracking-wide uppercase">Fix this first</h2>
               <p className="mt-1 font-semibold">
                 {first.number}. {first.title}
               </p>
               <p className="mt-1 text-sm">{first.fixHint}</p>
-              <p className="mt-1 text-sm text-neutral-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Earlier in the funnel explains later: a click ID lost at the redirect makes every
                 downstream attribution check fail too.
               </p>
@@ -153,7 +148,7 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
           )}
 
           <section className="mt-8">
-            <h2 className="text-lg font-semibold">The ten checks</h2>
+            <h2 className="font-serif text-xl font-semibold">The ten checks</h2>
             <ol className="mt-3 space-y-3">
               {orderForReport(report.results).map((c) => (
                 <CheckCard key={c.id} check={c} active={active} />
@@ -162,8 +157,8 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
           </section>
 
           <section className="mt-10">
-            <h2 className="text-lg font-semibold">What the browser saw</h2>
-            <p className="mt-1 text-sm text-neutral-600">
+            <h2 className="font-serif text-xl font-semibold">What the browser saw</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               Every page hop and every tracking request, on one clock. Customer data was redacted
               before any of this was stored.
             </p>
@@ -175,9 +170,9 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
           <details className="mt-8 text-sm">
             <summary className="cursor-pointer font-semibold">Run details</summary>
             <dl className="mt-3 grid grid-cols-[11rem_1fr] gap-y-1">
-              <dt className="text-neutral-500">Opened</dt>
+              <dt className="text-muted-foreground">Opened</dt>
               <dd className="break-all">{trace.entryUrl}</dd>
-              <dt className="text-neutral-500">Injected</dt>
+              <dt className="text-muted-foreground">Injected</dt>
               <dd>
                 {trace.injected.clickId
                   ? `${trace.clickIdParam}=${trace.injected.clickId}`
@@ -187,13 +182,13 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
                     .map(([k, v]) => `${k}=${v}`)
                     .join(', ')}`}
               </dd>
-              <dt className="text-neutral-500">Call to action</dt>
+              <dt className="text-muted-foreground">Call to action</dt>
               <dd>
                 {trace.cta
                   ? `“${trace.cta.text}” (rule: ${trace.cta.rule}) → ${shortUrl(trace.cta.href)}`
                   : 'none found'}
               </dd>
-              <dt className="text-neutral-500">robots.txt</dt>
+              <dt className="text-muted-foreground">robots.txt</dt>
               <dd>
                 {!trace.robots.fetched
                   ? 'not fetched'
@@ -201,14 +196,14 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
                     ? `disallows this path (${trace.robots.matchedRule}) — audited anyway at your request`
                     : `allows (HTTP ${trace.robots.status})`}
               </dd>
-              <dt className="text-neutral-500">Browser</dt>
+              <dt className="text-muted-foreground">Browser</dt>
               <dd className="break-all">{trace.userAgent}</dd>
-              <dt className="text-neutral-500">Duration</dt>
+              <dt className="text-muted-foreground">Duration</dt>
               <dd>
                 {((Date.parse(trace.finishedAt) - Date.parse(trace.startedAt)) / 1000).toFixed(1)} s
                 · {trace.requests.length} requests{trace.requestsTruncated && ' (truncated)'}
               </dd>
-              <dt className="text-neutral-500">Run log</dt>
+              <dt className="text-muted-foreground">Run log</dt>
               <dd>
                 <ul className="font-mono text-xs">
                   {[...run.events].reverse().map((e, i) => (
@@ -235,40 +230,42 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
 }
 
 function CheckCard({ check, active }: { check: CheckResult; active: BreakToggle[] }) {
+  // Status is the whole point of this page, so it is carried by three tokens that differ in
+  // lightness as well as hue: a pass reads calm, a failure loud, an undecided check quiet.
   const tone =
     check.status === 'pass'
-      ? { pill: 'bg-green-100 text-green-900', border: 'border-neutral-200' }
+      ? { pill: 'pill-pass', border: '' }
       : check.status === 'fail'
-        ? { pill: 'bg-red-600 text-white', border: 'border-red-300' }
-        : { pill: 'bg-neutral-200 text-neutral-700', border: 'border-neutral-200' };
+        ? { pill: 'pill-fail', border: 'border-destructive border-2' }
+        : { pill: 'pill-undecided', border: '' };
   const causes = togglesCaughtBy(check, active);
   return (
-    <li className={`rounded border ${tone.border} p-4`}>
+    <li className={`card p-4 ${tone.border}`}>
       <div className="flex flex-wrap items-baseline gap-2">
-        <span className={`rounded px-2 py-0.5 font-mono text-xs uppercase ${tone.pill}`}>
+        <span className={`pill font-mono uppercase ${tone.pill}`}>
           {check.status === 'inconclusive' ? 'undecided' : check.status}
         </span>
         <h3 className="font-semibold">
           {check.number}. {check.title}
         </h3>
         {causes.length > 0 && (
-          <span className="text-xs text-red-700">
+          <span className="pill pill-accent">
             expected — sabotaged by {causes.map((t) => BREAK_TOGGLE_INFO[t].label).join(', ')}
           </span>
         )}
       </div>
       <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[6rem_1fr]">
-        <dt className="text-neutral-500">Observed</dt>
+        <dt className="text-muted-foreground">Observed</dt>
         <dd>{check.observed}</dd>
-        <dt className="text-neutral-500">Expected</dt>
+        <dt className="text-muted-foreground">Expected</dt>
         <dd>{check.expected}</dd>
-        <dt className="text-neutral-500">
+        <dt className="text-muted-foreground">
           {check.status === 'inconclusive' ? 'Why undecided' : 'Because'}
         </dt>
-        <dd className="text-neutral-700">{check.reason}</dd>
+        <dd>{check.reason}</dd>
         {check.fixHint && (
           <>
-            <dt className="font-semibold text-red-700">Fix</dt>
+            <dt className="text-foreground font-semibold">Fix</dt>
             <dd className="font-medium">{check.fixHint}</dd>
           </>
         )}

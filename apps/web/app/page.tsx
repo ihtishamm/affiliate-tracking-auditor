@@ -20,14 +20,16 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">Affiliate Tracking Auditor</h1>
-      <p className="mt-3 text-lg text-neutral-600">
+      <h1 className="font-serif text-4xl font-semibold tracking-tight">
+        Affiliate Tracking Auditor
+      </h1>
+      <p className="text-muted-foreground mt-3 text-lg">
         Paste an affiliate funnel URL. A real browser walks it from landing page to checkout and
         runs ten checks on what it saw — click-ID survival, UTMs, pixel events, dedup, hashing,
         consent — and tells you the exact broken link.
       </p>
 
-      <form method="post" action="/api/runs" className="mt-8 rounded border border-neutral-900 p-4">
+      <form method="post" action="/api/runs" className="card mt-8 p-5">
         <input type="hidden" name="idempotency_key" value={randomUUID()} />
         <label className="block">
           <span className="font-semibold">Funnel URL</span>
@@ -38,18 +40,15 @@ export default async function HomePage() {
               required
               autoFocus
               placeholder="https://example.com/landing?click_id=abc123"
-              className="w-full flex-1 rounded border border-neutral-300 px-3 py-2"
+              className="field w-full flex-1"
             />
-            <button
-              type="submit"
-              className="rounded bg-neutral-900 px-5 py-2 font-semibold text-white hover:bg-neutral-700"
-            >
+            <button type="submit" className="btn btn-primary px-6">
               Audit
             </button>
           </div>
         </label>
         <details className="mt-3 text-sm">
-          <summary className="cursor-pointer text-neutral-600">
+          <summary className="text-muted-foreground cursor-pointer">
             Advanced: click-ID parameter name
           </summary>
           <label className="mt-2 block">
@@ -58,15 +57,15 @@ export default async function HomePage() {
               type="text"
               defaultValue={CLICK_ID_PARAM}
               pattern="[A-Za-z0-9_\-\[\]]{1,64}"
-              className="w-48 rounded border border-neutral-300 px-3 py-1"
+              className="field w-48 py-1"
             />
-            <span className="mt-1 block text-xs text-neutral-500">
+            <span className="text-muted-foreground mt-1 block text-xs">
               The parameter your network puts the click ID in. If the URL has none, the auditor adds
               one with a value it can trace.
             </span>
           </label>
         </details>
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="text-muted-foreground mt-3 text-xs">
           Takes 30–90 seconds. On a funnel we do not own, the run stops at the checkout page and the
           purchase-side checks report as undecided rather than guessed.
         </p>
@@ -76,24 +75,24 @@ export default async function HomePage() {
         <DemoForm advertorialUrl={advertorialUrl} idempotencyKey={randomUUID()} />
       </div>
 
-      <section className="mt-10 grid gap-6 text-sm text-neutral-600 sm:grid-cols-3">
-        <div>
-          <h3 className="font-semibold text-neutral-900">What it never keeps</h3>
+      <section className="text-muted-foreground mt-10 grid gap-6 text-sm sm:grid-cols-3">
+        <div className="card p-4">
+          <h3 className="text-foreground font-semibold">What it never keeps</h3>
           <p className="mt-1">
             Customer data is redacted the moment a request is seen: emails, phones, names, addresses
             become “present, hashed or not” — never the value. Traces expire in{' '}
             {RUN_LIMITS.traceTtlDays} days.
           </p>
         </div>
-        <div>
-          <h3 className="font-semibold text-neutral-900">What it never does</h3>
+        <div className="card p-4">
+          <h3 className="text-foreground font-semibold">What it never does</h3>
           <p className="mt-1">
             Reach private or internal addresses (every hop is checked), complete a purchase on a
             store it does not own, or report a failure it did not directly observe.
           </p>
         </div>
-        <div>
-          <h3 className="font-semibold text-neutral-900">Limits</h3>
+        <div className="card p-4">
+          <h3 className="text-foreground font-semibold">Limits</h3>
           <p className="mt-1">
             {RUN_LIMITS.rateLimitPerHour} runs per hour per address,{' '}
             {RUN_LIMITS.hardTimeoutMs / 1000} s per run. No account, no login: the report URL is the
@@ -101,7 +100,7 @@ export default async function HomePage() {
           </p>
         </div>
       </section>
-      <p className="mt-8 text-xs text-neutral-500">
+      <p className="text-muted-foreground mt-8 text-xs">
         <a
           className="underline"
           href="/advertorial?click_id=demo-001&utm_source=affiliate&utm_medium=cpc&utm_campaign=demo"

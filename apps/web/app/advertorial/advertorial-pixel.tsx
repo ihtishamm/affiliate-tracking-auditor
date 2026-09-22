@@ -58,24 +58,24 @@ export function AdvertorialPixel({ pixelId, toggles }: Props) {
     <div
       role="dialog"
       aria-label="Cookie consent"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-300 bg-white px-4 py-3 text-sm shadow-lg"
+      className="bg-popover text-popover-foreground fixed inset-x-0 bottom-0 z-50 border-t-2 px-4 py-3 text-sm shadow-lg"
     >
       <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
-        <p className="text-neutral-700">
+        <p className="text-foreground/90">
           We use cookies to measure our advertising. Accept to allow measurement cookies.
         </p>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setConsent('declined')}
-            className="rounded border border-neutral-400 px-3 py-1"
+            className="btn btn-muted px-3 py-1"
           >
             Decline
           </button>
           <button
             type="button"
             onClick={() => setConsent('granted')}
-            className="rounded bg-neutral-900 px-3 py-1 text-white"
+            className="btn btn-primary px-3 py-1"
           >
             Accept
           </button>

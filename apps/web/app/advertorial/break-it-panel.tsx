@@ -32,9 +32,9 @@ export function BreakItPanel({ active, ctaHref }: Props) {
   }
 
   return (
-    <aside className="rounded border border-red-300 bg-red-50 p-4 text-sm">
-      <h2 className="font-semibold text-red-900">Break-it panel</h2>
-      <p className="mt-1 text-red-800">
+    <aside className="card border-destructive bg-destructive/10 border-2 p-4 text-sm">
+      <h2 className="font-semibold">Break-it panel</h2>
+      <p className="mt-1">
         Each switch sabotages the funnel in one realistic way. Flip one, walk the funnel, and the
         named check must catch it.
       </p>
@@ -52,20 +52,20 @@ export function BreakItPanel({ active, ctaHref }: Props) {
                 className="mt-1 h-4 w-4 shrink-0"
               />
               <label htmlFor={`break-${toggle}`} className="cursor-pointer">
-                <span className="font-medium text-neutral-900">{info.label}</span>
-                <span className="ml-2 font-mono text-xs text-neutral-500">{toggle}</span>
-                <span className="ml-2 text-xs text-neutral-600">
+                <span className="font-medium text-foreground">{info.label}</span>
+                <span className="ml-2 font-mono text-xs text-muted-foreground">{toggle}</span>
+                <span className="ml-2 text-xs text-muted-foreground">
                   check {info.caughtBy.join(', ')} · {info.actsIn}
                   {info.requires ? ` · active from ${info.requires}` : ''}
                 </span>
-                <p className="mt-0.5 text-neutral-700">{info.breaks}</p>
+                <p className="mt-0.5 text-foreground/90">{info.breaks}</p>
               </label>
             </li>
           );
         })}
       </ul>
-      <p className="mt-4 text-xs text-neutral-600">CTA currently points at</p>
-      <code className="mt-1 block break-all rounded bg-white p-2 text-xs text-neutral-800">
+      <p className="mt-4 text-xs text-muted-foreground">CTA currently points at</p>
+      <code className="bg-popover text-popover-foreground mt-1 block rounded border p-2 text-xs break-all">
         {ctaHref}
       </code>
     </aside>

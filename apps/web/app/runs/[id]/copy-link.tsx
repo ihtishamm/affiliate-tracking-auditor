@@ -8,7 +8,7 @@ export function CopyLink() {
   return (
     <button
       type="button"
-      className="rounded border border-neutral-300 px-3 py-1 text-sm hover:bg-neutral-50"
+      className="btn btn-muted px-3 py-1 text-sm"
       onClick={() => {
         void navigator.clipboard.writeText(window.location.href).then(() => {
           setCopied(true);

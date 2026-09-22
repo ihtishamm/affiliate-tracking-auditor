@@ -14,18 +14,18 @@ export default async function FunnelsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <Link href="/" className="text-sm text-neutral-500 hover:underline">
+      <Link href="/" className="text-sm text-muted-foreground hover:underline">
         ← Auditor
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold">Saved funnels</h1>
-      <p className="mt-1 text-neutral-600">
+      <h1 className="mt-2 font-serif text-3xl font-semibold">Saved funnels</h1>
+      <p className="mt-1 text-muted-foreground">
         Each is re-audited daily at 06:00 UTC. A score that drops 20 points, or any check that goes
         from pass to fail, sends one alert. Save a funnel from any report page.
       </p>
       {funnels.length === 0 ? (
-        <p className="mt-6 text-sm text-neutral-500">Nothing saved yet.</p>
+        <p className="mt-6 text-sm text-muted-foreground">Nothing saved yet.</p>
       ) : (
-        <ul className="mt-6 divide-y divide-neutral-200 rounded border border-neutral-200">
+        <ul className="card mt-6 divide-y">
           {funnels.map((f, i) => {
             const s = latest[i];
             return (
@@ -34,13 +34,13 @@ export default async function FunnelsPage() {
                   <Link href={`/funnels/${f.id}`} className="font-semibold hover:underline">
                     {f.label}
                   </Link>
-                  <p className="truncate text-xs text-neutral-500">{f.url}</p>
+                  <p className="truncate text-xs text-muted-foreground">{f.url}</p>
                 </div>
                 <div className="text-right text-sm">
-                  <div className="text-2xl font-semibold tabular-nums">
+                  <div className="font-serif text-3xl font-semibold tabular-nums">
                     {!s || s.score === null ? '—' : `${Math.round(s.score * 100)}%`}
                   </div>
-                  <div className="text-xs text-neutral-500">
+                  <div className="text-xs text-muted-foreground">
                     {s
                       ? `${s.counts.fail} fail · ${s.scoredAt.toISOString().slice(0, 10)}`
                       : 'not scored yet'}

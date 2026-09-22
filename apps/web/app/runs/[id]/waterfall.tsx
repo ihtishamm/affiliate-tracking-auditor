@@ -4,12 +4,15 @@ import { waterfallRows, type WaterfallRow } from '@/lib/report-view.ts';
 const ROW = 18;
 const LABEL_W = 230;
 const CHART_W = 620;
+// Chart colours come from the theme's chart tokens rather than fixed hexes, so the timeline
+// stays part of the palette (and follows it if the palette changes). Blocked hops are the one
+// exception: they borrow --destructive, because "refused" means the same here as everywhere.
 const COLORS: Record<WaterfallRow['kind'], string> = {
-  hop: '#a3a3a3',
-  pixel: '#2563eb',
-  container: '#d97706',
-  cart: '#16a34a',
-  postback: '#7c3aed',
+  hop: 'var(--muted-foreground)',
+  pixel: 'var(--chart-1)',
+  container: 'var(--chart-3)',
+  cart: 'var(--chart-2)',
+  postback: 'var(--chart-5)',
 };
 
 /**
@@ -36,8 +39,15 @@ export function Waterfall({ trace }: { trace: RunTrace }) {
       >
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={x(t)} y1={16} x2={x(t)} y2={height} stroke="#e5e5e5" />
-            <text x={x(t)} y={11} textAnchor="middle" fill="#737373">
+            <line
+              x1={x(t)}
+              y1={16}
+              x2={x(t)}
+              y2={height}
+              stroke="var(--border)"
+              strokeOpacity={0.3}
+            />
+            <text x={x(t)} y={11} textAnchor="middle" fill="var(--muted-foreground)">
               {(t / 1000).toFixed(0)}s
             </text>
           </g>
@@ -46,7 +56,7 @@ export function Waterfall({ trace }: { trace: RunTrace }) {
           const y = 20 + i * ROW;
           const x1 = x(r.t);
           const w = r.kind === 'hop' ? Math.max(x(r.end) - x1, 2) : 4;
-          const fill = r.blocked ? '#dc2626' : COLORS[r.kind];
+          const fill = r.blocked ? 'var(--destructive)' : COLORS[r.kind];
           return (
             <g key={i}>
               <title>{`${r.label} — ${r.detail} — at ${(r.t / 1000).toFixed(2)}s`}</title>
@@ -54,7 +64,7 @@ export function Waterfall({ trace }: { trace: RunTrace }) {
                 x={LABEL_W - 8}
                 y={y + 12}
                 textAnchor="end"
-                fill={r.kind === 'hop' ? '#171717' : '#525252'}
+                fill={r.kind === 'hop' ? 'var(--foreground)' : 'var(--muted-foreground)'}
                 fontWeight={r.kind === 'hop' ? 600 : 400}
               >
                 {r.label.length > 38 ? `…${r.label.slice(-37)}` : r.label}
@@ -69,7 +79,7 @@ export function Waterfall({ trace }: { trace: RunTrace }) {
                 opacity={r.kind === 'hop' ? 0.35 : 0.95}
               />
               {r.kind === 'hop' && r.status !== null && (
-                <text x={x1 + 4} y={y + 12} fill="#171717">
+                <text x={x1 + 4} y={y + 12} fill="var(--foreground)">
                   {r.status}
                 </text>
               )}
@@ -77,29 +87,29 @@ export function Waterfall({ trace }: { trace: RunTrace }) {
           );
         })}
       </svg>
-      <figcaption className="mt-2 flex flex-wrap gap-4 text-xs text-neutral-600">
+      <figcaption className="text-muted-foreground mt-2 flex flex-wrap gap-4 text-xs">
         <span>
-          <i className="mr-1 inline-block h-2 w-3 bg-neutral-400 align-middle" />
+          <i className="bg-muted-foreground mr-1 inline-block h-2 w-3 align-middle" />
           page hop
         </span>
         <span>
-          <i className="mr-1 inline-block h-2 w-3 bg-blue-600 align-middle" />
+          <i className="bg-chart-1 mr-1 inline-block h-2 w-3 align-middle" />
           Meta pixel
         </span>
         <span>
-          <i className="mr-1 inline-block h-2 w-3 bg-amber-600 align-middle" />
+          <i className="bg-chart-3 mr-1 inline-block h-2 w-3 align-middle" />
           tag container
         </span>
         <span>
-          <i className="mr-1 inline-block h-2 w-3 bg-green-600 align-middle" />
+          <i className="bg-chart-2 mr-1 inline-block h-2 w-3 align-middle" />
           cart attributes
         </span>
         <span>
-          <i className="mr-1 inline-block h-2 w-3 bg-violet-600 align-middle" />
+          <i className="bg-chart-5 mr-1 inline-block h-2 w-3 align-middle" />
           postback
         </span>
         <span>
-          <i className="mr-1 inline-block h-2 w-3 bg-red-600 align-middle" />
+          <i className="bg-destructive mr-1 inline-block h-2 w-3 align-middle" />
           blocked
         </span>
         <span>· hover a row for details · {trace.requests.length} requests in total</span>

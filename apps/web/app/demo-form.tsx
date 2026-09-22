@@ -35,21 +35,18 @@ export function DemoForm({ advertorialUrl, idempotencyKey }: Props) {
     });
 
   return (
-    <form method="post" action="/api/runs" className="rounded border border-neutral-200 p-4">
+    <form method="post" action="/api/runs" className="card p-5">
       <input type="hidden" name="idempotency_key" value={idempotencyKey} />
       <input type="hidden" name="url" value={url.toString()} />
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-semibold">Or audit the demo funnel</h2>
-        <button
-          type="submit"
-          className="rounded bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
-        >
+        <button type="submit" className="btn btn-secondary text-sm">
           {active.size
             ? `Audit with ${active.size} thing${active.size === 1 ? '' : 's'} broken`
             : 'Audit the clean demo'}
         </button>
       </div>
-      <p className="mt-1 text-sm text-neutral-600">
+      <p className="text-muted-foreground mt-1 text-sm">
         A real advertorial → redirect → Shopify store → checkout, that we own. Tick a switch to
         break it in one realistic way; the report names the check that catches it.
       </p>
@@ -67,7 +64,7 @@ export function DemoForm({ advertorialUrl, idempotencyKey }: Props) {
                 />
                 <span>
                   <span className="font-medium">{info.label}</span>
-                  <span className="block text-xs text-neutral-500">
+                  <span className="text-muted-foreground block text-xs">
                     caught by check {info.caughtBy.join(' and ')}
                   </span>
                 </span>
@@ -76,7 +73,7 @@ export function DemoForm({ advertorialUrl, idempotencyKey }: Props) {
           );
         })}
       </ul>
-      <p className="mt-3 break-all font-mono text-xs text-neutral-500">{url.toString()}</p>
+      <p className="text-muted-foreground mt-3 font-mono text-xs break-all">{url.toString()}</p>
     </form>
   );
 }

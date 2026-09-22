@@ -50,11 +50,11 @@ export default async function ReconcilePage({
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
-      <Link href="/" className="text-sm text-neutral-500 hover:underline">
+      <Link href="/" className="text-sm text-muted-foreground hover:underline">
         ← Auditor
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold">Reconciliation</h1>
-      <p className="mt-1 text-neutral-600">
+      <h1 className="mt-2 font-serif text-3xl font-semibold">Reconciliation</h1>
+      <p className="mt-1 text-muted-foreground">
         Every order Shopify reports for the window, and whether each thing that should follow a sale
         actually happened: a click ID on the order, the webhook, the browser Purchase, the server
         Purchase, the postback. The first missing stage is the drop-off.
@@ -63,33 +63,19 @@ export default async function ReconcilePage({
       <form method="get" className="mt-6 flex flex-wrap items-end gap-3 text-sm">
         <label>
           From{' '}
-          <input
-            type="date"
-            name="from"
-            defaultValue={from}
-            className="ml-1 rounded border border-neutral-300 px-2 py-1"
-          />
+          <input type="date" name="from" defaultValue={from} className="field ml-1 px-2 py-1" />
         </label>
         <label>
-          To{' '}
-          <input
-            type="date"
-            name="to"
-            defaultValue={to}
-            className="ml-1 rounded border border-neutral-300 px-2 py-1"
-          />
+          To <input type="date" name="to" defaultValue={to} className="field ml-1 px-2 py-1" />
         </label>
-        <button
-          type="submit"
-          className="rounded bg-neutral-900 px-4 py-1.5 font-semibold text-white"
-        >
+        <button type="submit" className="btn btn-primary py-1.5">
           Reconcile
         </button>
-        <span className="text-neutral-500">UTC days, up to 31.</span>
+        <span className="text-muted-foreground">UTC days, up to 31.</span>
       </form>
 
       {error && (
-        <p className="mt-6 rounded border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+        <p className="card border-destructive bg-destructive/10 mt-6 border-2 p-4 text-sm">
           {error}
         </p>
       )}
@@ -115,7 +101,7 @@ export default async function ReconcilePage({
             />
           </dl>
 
-          <h2 className="mt-8 text-lg font-semibold">
+          <h2 className="mt-8 font-serif text-xl font-semibold">
             {report.counts.discrepancies === 0
               ? 'No gaps in this window'
               : `${report.counts.discrepancies} order${report.counts.discrepancies === 1 ? '' : 's'} with a gap`}
@@ -131,7 +117,7 @@ export default async function ReconcilePage({
             </div>
           </details>
 
-          <p className="mt-8 text-xs text-neutral-500">
+          <p className="mt-8 text-xs text-muted-foreground">
             Window {report.window.from.slice(0, 10)} → {report.window.to.slice(0, 10)} ·{' '}
             {report.pages} Admin API page{report.pages === 1 ? '' : 's'}
             {report.throttle &&
@@ -158,11 +144,11 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded border p-3 ${tone === 'bad' ? 'border-red-300 bg-red-50' : tone === 'good' ? 'border-green-300 bg-green-50' : 'border-neutral-200'}`}
+      className={`card p-3 ${tone === 'bad' ? 'border-destructive bg-destructive/10 border-2' : tone === 'good' ? 'border-secondary bg-secondary/20 border-2' : ''}`}
     >
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
-      <dd className="text-xs text-neutral-500">{note}</dd>
+      <dt className="text-muted-foreground text-xs">{label}</dt>
+      <dd className="font-serif text-3xl font-semibold tabular-nums">{value}</dd>
+      <dd className="text-muted-foreground text-xs">{note}</dd>
     </div>
   );
 }
@@ -179,13 +165,10 @@ function Mark({ state }: { state: boolean | 'ok' | 'missing' | 'unknown' }) {
   const s = state === true ? 'ok' : state === false ? 'missing' : state;
   return (
     <span
-      className={
-        s === 'ok'
-          ? 'text-green-700'
-          : s === 'missing'
-            ? 'font-semibold text-red-700'
-            : 'text-neutral-400'
-      }
+      className={`pill px-1.5 py-0 ${
+        s === 'ok' ? 'pill-pass' : s === 'missing' ? 'pill-fail' : 'pill-undecided'
+      }`}
+      title={s === 'unknown' ? 'not watched' : s}
     >
       {s === 'ok' ? '✓' : s === 'missing' ? '✗' : '?'}
     </span>
@@ -195,8 +178,8 @@ function Mark({ state }: { state: boolean | 'ok' | 'missing' | 'unknown' }) {
 function OrderTable({ lines }: { lines: OrderLine[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="text-left text-xs text-neutral-500">
+      <table className="card w-full p-2 text-sm">
+        <thead className="text-muted-foreground text-left text-xs">
           <tr>
             <th className="py-1 pr-3">Order</th>
             <th className="py-1 pr-3">Created</th>
@@ -211,16 +194,16 @@ function OrderTable({ lines }: { lines: OrderLine[] }) {
         </thead>
         <tbody>
           {lines.map((l) => (
-            <tr key={l.id} className="border-t border-neutral-200 align-top">
+            <tr key={l.id} className="border-t align-top">
               <td className="py-2 pr-3 font-mono">
                 {l.name}
-                <span className="block text-xs text-neutral-500">{l.id}</span>
+                <span className="block text-xs text-muted-foreground">{l.id}</span>
               </td>
               <td className="py-2 pr-3 whitespace-nowrap">
                 {l.createdAt.slice(0, 16).replace('T', ' ')}
               </td>
               <td className="py-2 pr-3 font-mono">
-                {l.clickId ?? <span className="text-red-700">—</span>}
+                {l.clickId ?? <span className="pill pill-fail px-1.5 py-0">—</span>}
               </td>
               <td className="py-2 pr-2 text-center">
                 <Mark state={l.webhook} />
@@ -237,11 +220,11 @@ function OrderTable({ lines }: { lines: OrderLine[] }) {
               <td className="py-2 pr-3">
                 {l.dropOff ? (
                   <>
-                    <span className="font-semibold text-red-700">{STAGE_LABEL[l.dropOff]}</span>
-                    <span className="block text-xs text-neutral-600">{l.why}</span>
+                    <span className="pill pill-fail">{STAGE_LABEL[l.dropOff]}</span>
+                    <span className="text-muted-foreground mt-1 block text-xs">{l.why}</span>
                   </>
                 ) : (
-                  <span className="text-neutral-500">{l.why}</span>
+                  <span className="text-muted-foreground">{l.why}</span>
                 )}
               </td>
               <td className="py-2">

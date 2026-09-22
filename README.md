@@ -142,6 +142,23 @@ Shopify dev store          Advertorial domain        Auditor
 | Postgres          | Neon                            | Pooled endpoint, because Vercel functions cannot share a connection pool.                                                                 |
 | Redis             | Railway                         | Job queue (BullMQ) and rate-limit counters, on the worker's private network.                                                              |
 
+### Look and feel
+
+One theme file (`apps/web/app/globals.css`) holds every colour, radius, shadow and font as a
+token, and no page names a palette colour — so the whole look is swappable from that file, and
+a component cannot quietly invent its own grey. Three of those tokens do real work rather than
+decoration: borders are a colour rather than a hairline grey, shadows are hard 3px offsets
+(which is what makes a pressed button feel pressed), and the status tokens are the report's
+vocabulary — a pass is filled, a failure is filled and loud, and an undecided check is a
+**dashed outline**. That last one is deliberate: "passed" and "could not be decided" are the
+two answers this tool must never blur, and distinguishing them by texture survives a bad
+monitor, a greyscale print and colour blindness, where two similar hues would not.
+
+Typography: Poppins for the interface, Lora for headings and for the advertorial's body copy
+(it is editorial pastiche, so it gets the editorial face), Fira Code for URLs and IDs. All
+three are self-hosted through `next/font` — no request to a third party from a tool that exists
+to audit third-party requests.
+
 ## Demo funnel and break-it panel
 
 The demo funnel is a duplicate affiliate funnel end to end: **advertorial** (`/advertorial`, this
