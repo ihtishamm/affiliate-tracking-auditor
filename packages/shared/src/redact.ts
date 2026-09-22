@@ -274,16 +274,82 @@ export function redactQuery(search: string | URLSearchParams, known?: KnownIdent
  * query value replaced by the marker `[redacted]`. Used for the submitted URL, page URLs in
  * snapshots and script URLs — anywhere a URL, rather than a param map, is stored.
  */
-export function redactUrl(input: string | URL): string {
+export function redactUrl(input: string | URL, known?: KnownIdentity): string {
   const url = new URL(input);
   const params = new URLSearchParams();
   for (const [key, value] of url.searchParams) {
-    const c = classifyParam(key, value);
+    // `known` matters here as much as it does for a param map: a checkout URL can carry the
+    // typed street or city under a name no rule anticipates, and URLSearchParams has already
+    // decoded `350+5th+Ave` back into something the typed-value test can recognise.
+    const c = classifyParam(key, value, known);
     params.set(key, c.kind === 'value' ? c.value : '[redacted]');
   }
   url.search = params.size > 0 ? `?${params.toString()}` : '';
   url.hash = '';
   return url.toString();
+}
+
+// ---- free text ------------------------------------------------------------------------------
+
+const MAX_TEXT_CHARS = 300;
+// An error message is prose, and prose quotes URLs: Playwright writes
+// `page.goto: net::ERR_ABORTED at https://shop.example/checkout?email=jane%40x.com`, and a
+// checkout's error banner quotes what was just typed into it. That text is stored — it becomes
+// `run_events.detail.error` and `trace.outcome.stopReason` — so §8 applies to it exactly as it
+// applies to a parameter. Being an error is not an exemption; it is simply a harder shape to
+// redact, which is why it gets its own function rather than being trusted.
+//
+// Three passes, in this order, because each one leaves work for the next:
+//   1. Every URL in the text goes through `redactUrl`, which keeps the origin and path (the
+//      part that explains the failure) and drops PII-looking query values.
+//   2. Anything the runner typed is replaced outright. Pass 1 catches it only inside a query
+//      string; a banner saying "We couldn't ship to 350 5th Ave" is plain prose.
+//   3. Bare email and phone shapes that survived both — a stranger's funnel echoing a
+//      customer's address in an error we never typed.
+// Then truncate: an error is a clue, not a document.
+const URL_IN_TEXT = /\bhttps?:\/\/[^\s"'`<>]+/gi;
+const EMAIL_IN_TEXT = /[^\s@/"'<>]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
+// Deliberately narrow: a leading `+`, or the separated form a form field produces. Anything
+// looser would redact the timestamps, order numbers and click IDs that make an error useful.
+const PHONE_IN_TEXT = /\+\d[\d\s().-]{5,}\d|\(?\b\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b/g;
+
+/** Makes a free-text string safe to persist. See the comment above for why each pass exists. */
+export function scrubText(text: string, known?: KnownIdentity, max = MAX_TEXT_CHARS): string {
+  let out = text.replace(URL_IN_TEXT, (match) => {
+    // The sentence's punctuation is not part of the URL: "...at https://x/y?z=1." would
+    // otherwise fail to parse and lose the whole address.
+    const trailing = /[.,;:!?)\]}'"]+$/.exec(match)?.[0] ?? '';
+    const bare = trailing ? match.slice(0, -trailing.length) : match;
+    try {
+      return redactUrl(bare, known) + trailing;
+    } catch {
+      return '[url]' + trailing;
+    }
+  });
+  for (const typed of [...(known?.values ?? []), known?.email, known?.phone]) {
+    // Three characters, for the same reason the param rule uses that floor: "NY" would match
+    // half the words in an error message.
+    if (typed && typed.length >= 3) out = replaceInsensitive(out, typed, '[redacted]');
+  }
+  out = out.replace(EMAIL_IN_TEXT, '[redacted]');
+  out = out.replace(PHONE_IN_TEXT, (m) => {
+    const digits = m.replace(/\D/g, '').length;
+    return digits >= 7 && digits <= 15 ? '[redacted]' : m;
+  });
+  return out.length > max ? `${out.slice(0, max)}\u2026` : out;
+}
+
+/** Case-insensitive replace-all without building a regex out of user text (a street can contain `(`). */
+function replaceInsensitive(text: string, needle: string, replacement: string): string {
+  const lowerNeedle = needle.toLowerCase();
+  let out = '';
+  let rest = text;
+  for (;;) {
+    const at = rest.toLowerCase().indexOf(lowerNeedle);
+    if (at === -1) return out + rest;
+    out += rest.slice(0, at) + replacement;
+    rest = rest.slice(at + needle.length);
+  }
 }
 
 // ---- bodies ----------------------------------------------------------------------------------

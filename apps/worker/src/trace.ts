@@ -6,6 +6,7 @@ import {
   redactBody,
   redactQuery,
   redactUrl,
+  scrubText,
   RUN_LIMITS,
   UTM_PARAMS,
   type FunnelStep,
@@ -92,6 +93,20 @@ export class TraceCollector {
     this.known = identity;
   }
 
+  /**
+   * Every URL that ends up in the stored trace goes through here. It redacts knowing what the
+   * runner typed — a checkout URL can carry the typed city or street under a parameter name no
+   * rule anticipates — and it never throws: a URL we cannot parse is a field value, not a
+   * failed run.
+   */
+  private safeUrl(url: string | URL): string {
+    try {
+      return redactUrl(url, this.known);
+    } catch {
+      return '[unparseable]';
+    }
+  }
+
   async attach(context: BrowserContext): Promise<void> {
     await context.route('**/*', async (route, request) => {
       if (isMainFrameNavigation(request)) {
@@ -101,7 +116,7 @@ export class TraceCollector {
           this.hops.push({
             t: this.now(),
             from: this.lastMainUrl,
-            to: redactUrl(request.url()),
+            to: this.safeUrl(request.url()),
             status: null,
             kind: 'blocked',
           });
@@ -132,7 +147,7 @@ export class TraceCollector {
       const location = response.headers()['location'];
       if (location && response.status() >= 300 && response.status() < 400) {
         try {
-          rec.entry.redirectTo = redactUrl(new URL(location, response.url()));
+          rec.entry.redirectTo = this.safeUrl(new URL(location, response.url()));
         } catch {
           rec.entry.redirectTo = '[unparseable]';
         }
@@ -194,8 +209,8 @@ export class TraceCollector {
       this.redirectedFromRaw = from ? from.url() : null;
       hop = {
         t: entry.t,
-        from: from ? redactUrl(from.url()) : this.lastMainUrl,
-        to: redactUrl(url),
+        from: from ? this.safeUrl(from.url()) : this.lastMainUrl,
+        to: this.safeUrl(url),
         status: null,
         kind: from ? 'redirect' : 'navigate',
       };
@@ -261,8 +276,9 @@ export class TraceCollector {
     const snap: PageSnapshot = {
       step,
       t: this.now(),
-      url: redactUrl(url),
-      title: evaluated.title.slice(0, 200),
+      url: this.safeUrl(url),
+      // A page we do not control, greeting a shopper by the name it was given.
+      title: scrubText(evaluated.title, this.known, 200),
       // Values are ours to keep only for the record we defined; everything else is a name.
       cookies: cookies.map((c) => ({
         name: c.name,
@@ -275,7 +291,7 @@ export class TraceCollector {
         foundIn,
         source,
       },
-      scripts: evaluated.scripts.slice(0, 200).map((s) => safeRedactUrl(s)),
+      scripts: evaluated.scripts.slice(0, 200).map((s) => this.safeUrl(s)),
       consent: { bannerVisible: evaluated.matched !== null, matched: evaluated.matched },
     };
     this.steps.push(snap);
@@ -341,14 +357,6 @@ function safeSearchParams(url: string): URLSearchParams | null {
     return new URL(url).searchParams;
   } catch {
     return null;
-  }
-}
-
-function safeRedactUrl(url: string): string {
-  try {
-    return redactUrl(url);
-  } catch {
-    return '[unparseable]';
   }
 }
 

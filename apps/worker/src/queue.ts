@@ -6,6 +6,7 @@ import {
   QUEUE_NAME,
   RUN_LIMITS,
   runJobSchema,
+  scrubText,
   type Logger,
   type RunJob,
   type RunStatus,
@@ -113,7 +114,11 @@ export function startQueueWorker(deps: QueueDeps): {
     if (!job) return;
     const runId = job.data.runId;
     const exhausted = job.attemptsMade >= (job.opts.attempts ?? 1);
-    const error = err.message.split('\n')[0] ?? 'error';
+    // This message is about to become a database row and a DLQ payload. The funnel driver
+    // already scrubbed what it knows the runner typed; this pass is for everything that
+    // failed outside it, because Playwright and undici both quote the failing URL — query
+    // string included — in ordinary infrastructure errors.
+    const error = scrubText(err.message.split('\n')[0] ?? 'error');
     void (async () => {
       if (exhausted) {
         await deps.appendEvent(runId, 'failed', job.attemptsMade, { error, worker: deps.version });

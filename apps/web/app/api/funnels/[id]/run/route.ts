@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { repo } from '@auditor/db';
-import { parseBreakToggles } from '@auditor/shared';
+import { parseBreakToggles, RUN_LIMITS } from '@auditor/shared';
 import { getDb } from '@/lib/db.ts';
 import { runFunnelNow } from '@/lib/funnels.ts';
-import { enqueueRun } from '@/lib/queue.ts';
+import { enqueueRun, queueDepth } from '@/lib/queue.ts';
 import { clientKeyFromHeaders, rateLimiter } from '@/lib/rate-limit.ts';
 import { getRedis } from '@/lib/redis.ts';
 import { appendRunEvent } from '@/lib/store.ts';
@@ -25,6 +25,11 @@ export async function POST(
   const db = getDb();
   const funnel = await repo.getFunnel(db, id);
   if (!funnel) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  // The global cap a submission gets (lib/runs.ts). Without it this button is a way around
+  // that cap: same browser, same cost, different route.
+  const queued = await queueDepth();
+  if (queued >= RUN_LIMITS.maxQueueDepth)
+    return NextResponse.json({ error: 'busy', queued }, { status: 503 });
   const isForm = (request.headers.get('content-type') ?? '').includes('form');
   // Optional sabotage for this run only: form `break` fields or JSON `{ break: "a,b" }`.
   let requested = '';

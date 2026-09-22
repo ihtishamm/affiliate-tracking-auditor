@@ -41,6 +41,13 @@ export const RUN_LIMITS = {
   traceTtlDays: 7,
   rateLimitPerHour: 5,
   maxQueueDepth: 20,
+  /**
+   * M9: saving a funnel is the one public action with a permanent cost — every saved funnel
+   * is a browser run every day, for as long as the deployment lives, and nothing expires it.
+   * A per-IP rate limit bounds the rate of saves, not the total, so the total needs its own
+   * cap. 25 is far more than a demo needs and still a bounded daily bill.
+   */
+  maxSavedFunnels: 25,
 } as const;
 
 // ---- submission ------------------------------------------------------------------------------

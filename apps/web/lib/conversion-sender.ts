@@ -9,6 +9,7 @@ import {
   normalisePhone,
   postbackIdForOrder,
   purchaseEventId,
+  scrubText,
   signHex,
   type Logger,
   type PostbackPayload,
@@ -206,9 +207,12 @@ async function withRetries(
       const res = await attemptFn();
       statusCode = res.status;
       ok = res.ok;
-      if (!ok) error = (await res.text()).slice(0, 300);
+      // A rejection body is someone else's free text, and it is stored
+      // (conversion_attempts.error): Meta's Graph API quotes the parameter it disliked, and a
+      // postback receiver can quote the whole request. scrubText also does the truncating.
+      if (!ok) error = scrubText(await res.text());
     } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
+      error = scrubText(err instanceof Error ? err.message : String(err));
     }
     await deps.record({ ...ctx, attempt, statusCode, ok, error });
     deps.log[ok ? 'info' : 'warn'](`${ctx.kind} attempt ${attempt}`, {
